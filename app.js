@@ -6,7 +6,7 @@ var logger = require('morgan');
 
 
 var mongoose = require('mongoose');
-var mongoDB = "mongodb://127.0.0.1/shop2go"
+var mongoDB = "mongodb://mongo:27017/shop2go"
 mongoose.connect(mongoDB);
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;

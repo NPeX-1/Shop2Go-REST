@@ -29,7 +29,7 @@ module.exports = {
     show: function (req, res) {
         var id = req.params.id;
 
-        UsersModel.findOne({_id: id}, function (err, Users) {
+        UsersModel.findOne({ _id: id }, function (err, Users) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Users.',
@@ -52,17 +52,18 @@ module.exports = {
      */
     create: function (req, res) {
         var Users = new UsersModel({
-			username : req.body.username,
-			password : req.body.password,
-			pfppath : req.body.pfppath,
+            username: req.query.username,
+            password: req.query.password,
+            pfppath: req.query.pfppath,
             signupdate: new Date(Date.now()).toISOString(),
             bookmarks: Array[null],
             interested: Array[null],
-			admin : req.body.admin
+            admin: req.query.admin
         });
-
+        console.log(Users);
         Users.save(function (err, Users) {
             if (err) {
+                console.log(err);
                 return res.status(500).json({
                     message: 'Error when creating Users',
                     error: err
@@ -79,7 +80,7 @@ module.exports = {
     update: function (req, res) {
         var id = req.params.id;
 
-        UsersModel.findOne({_id: id}, function (err, Users) {
+        UsersModel.findOne({ _id: id }, function (err, Users) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Users',
@@ -94,13 +95,13 @@ module.exports = {
             }
 
             Users.username = req.body.username ? req.body.username : Users.username;
-			Users.password = req.body.password ? req.body.password : Users.password;
-			Users.pfppath = req.body.pfppath ? req.body.pfppath : Users.pfppath;
-			Users.signupdate = req.body.signupdate ? req.body.signupdate : Users.signupdate;
-			Users.bookmarks = req.body.bookmarks ? req.body.bookmarks : Users.bookmarks;
-			Users.interested = req.body.interested ? req.body.interested : Users.interested;
-			Users.admin = req.body.admin ? req.body.admin : Users.admin;
-			
+            Users.password = req.body.password ? req.body.password : Users.password;
+            Users.pfppath = req.body.pfppath ? req.body.pfppath : Users.pfppath;
+            Users.signupdate = req.body.signupdate ? req.body.signupdate : Users.signupdate;
+            Users.bookmarks = req.body.bookmarks ? req.body.bookmarks : Users.bookmarks;
+            Users.interested = req.body.interested ? req.body.interested : Users.interested;
+            Users.admin = req.body.admin ? req.body.admin : Users.admin;
+
             Users.save(function (err, Users) {
                 if (err) {
                     return res.status(500).json({

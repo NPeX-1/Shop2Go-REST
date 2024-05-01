@@ -1,15 +1,15 @@
 var mongoose = require('mongoose');
-var bcyrpt = require('bcrypt');
-var Schema   = mongoose.Schema;
+var Schema = mongoose.Schema;
+var bcrypt = require('bcrypt');
 
 var UsersSchema = new Schema({
-	'username' : String,
-	'password' : String,
-	'pfppath' : String,
-	'signupdate' : Date,
-	'bookmarks' : Array,
-	'interested' : Array,
-	'admin' : Boolean
+	'username': String,
+	'password': String,
+	'pfppath': String,
+	'signupdate': Date,
+	'bookmarks': Array,
+	'interested': Array,
+	'admin': Boolean
 });
 
 
