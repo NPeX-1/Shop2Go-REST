@@ -9,6 +9,7 @@ var UsersSchema = new Schema({
 	'signupdate': Date,
 	'bookmarks': Array,
 	'interested': Array,
+	'history': Array,
 	'admin': Boolean
 });
 
