@@ -11,7 +11,14 @@ module.exports = {
      * OffersController.list()
      */
     list: function (req, res) {
-        OffersModel.find(function (err, Offerss) {
+	var query = req.query.query;
+
+        var searchQuery = {};
+
+        if (query) {
+            searchQuery.$text = { $search: query };
+        }
+        OffersModel.find(searchQuery, function (err, Offerss) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
