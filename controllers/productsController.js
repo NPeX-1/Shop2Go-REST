@@ -11,15 +11,7 @@ module.exports = {
      * productsController.list()
      */
     list: function (req, res) {
-        var query = req.query.query;
-
-        var searchQuery = {};
-
-        if (query) {
-            searchQuery.$text = { $search: query };
-        }
-
-        ProductsModel.find(searchQuery, function (err, products) {
+        ProductsModel.find(function (err, productss) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting products.',
@@ -27,10 +19,9 @@ module.exports = {
                 });
             }
 
-            return res.json(products);
+            return res.json(productss);
         });
     },
-
 
     /**
      * productsController.show()

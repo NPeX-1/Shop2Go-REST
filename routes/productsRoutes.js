@@ -6,7 +6,6 @@ var productsController = require('../controllers/productsController.js');
  * GET
  */
 router.get('/', productsController.list);
-router.get('/search', productsController.list);
 
 /*
  * GET
