@@ -1,4 +1,6 @@
 var UsersModel = require('../models/UsersModel.js');
+var OffersModel = require('../models/OffersModel.js')
+var ObjectId = mongoose.ObjectId();
 
 /**
  * UsersController.js
@@ -47,6 +49,70 @@ module.exports = {
         });
     },
 
+    wishlist: function (req, res) {
+        var id = req.session.userId;
+
+        UsersModel.findOne({ _id: id }, function (err, Users) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when getting Users.',
+                    error: err
+                });
+            }
+            var newPosts = [];
+            for (var i = 0; i < Users.interested.length; i++) {
+                var words = Users.interested[i].split(" ");
+                while (words.length < 4) {
+                    words.push("");
+                }
+                OffersModel.find({
+                    "$and": [{ "title": { "$regex": words[0] } }, { "title": { "$regex": words[1] } },
+                    { "title": { "$regex": words[2] } }, { "title": { "$regex": words[3] } },
+                    { "postTime": { "$gt": Date(Date.now()).toISOString(), } }]
+                }, function (err, Offers) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when getting Wishlist.',
+                            error: err
+                        });
+                    }
+
+                    for (offer in Offers) {
+                        var objInterest = {
+                            action: ObjectId(offer._id),
+                            update: false
+                        };
+                        newPosts.push(objInterest);
+                    }
+
+
+                });
+            }
+            if (!Users) {
+                return res.status(404).json({
+                    message: 'No such Wishlist Items Yet'
+                });
+            }
+
+            UsersModel.findOneAndUpdate({ _id: id }, { interestedReplies: { $each: newPosts }, lastrefresh: Date(Date.now()).toISOString() }, { new: true }).populate("interestedReplies.action").populate("bookmarks.bookmark").exec(function (err, Users2) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when getting Users.',
+                        error: err
+                    });
+                }
+
+                if (!Users2) {
+                    return res.status(404).json({
+                        message: 'No such Users'
+                    });
+                }
+
+                return res.json(Users2);
+            });
+        });
+    },
+
     /**
      * UsersController.create()
      */
@@ -56,6 +122,7 @@ module.exports = {
             password: req.query.password,
             pfppath: req.query.pfppath,
             signupdate: new Date(Date.now()).toISOString(),
+            lastrefresh: new Date(Date.now()).toISOString(),
             bookmarks: Array[null],
             interested: Array[null],
             interestedReplies: Array[null],
@@ -100,7 +167,8 @@ module.exports = {
             Users.password = req.body.password ? req.body.password : Users.password;
             Users.pfppath = req.body.pfppath ? req.body.pfppath : Users.pfppath;
             Users.signupdate = Users.signupdate;
-            Users.bookmarks =  Users.bookmarks;
+            Users.lastrefresh = new Date(Date.now()).toISOString();
+            Users.bookmarks = Users.bookmarks;
             Users.interested = Users.interested;
             Users.interestedReplies = Users.interestedReplies;
             Users.history = Users.history;
@@ -134,6 +202,21 @@ module.exports = {
             }
 
             return res.status(204).json();
+        });
+    },
+
+    removeWishlistItem: function (req, res) {
+        var id = req.params.id;
+
+        UsersModel.findOneAndUpdate({ _id: id }, { $pull: { interested: req.body.toRemove } }, { new: true }, function (err, Users) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when deleting the Users.',
+                    error: err
+                });
+            }
+
+            return res.status(200).json(Users);
         });
     }
 };

@@ -7,7 +7,9 @@ var recaptcha = new Recaptcha('6LcqTtspAAAAAE0QJruQ6T5V_jegb87IZmrEuLRQ', '6LcqT
 router.get('/', UsersController.list);
 
 
+router.get('/wishlist', User.Controller.wishlist);
 router.get('/:id', UsersController.show);
+
 
 
 router.post('/', recaptcha.middleware.verify, UsersController.create);
@@ -16,6 +18,7 @@ router.post('/', recaptcha.middleware.verify, UsersController.create);
 router.put('/:id', UsersController.update);
 
 
+router.delete('/wishlist', UsersController.removeWishlistItem);
 router.delete('/:id', UsersController.remove);
 
 module.exports = router;
