@@ -7,6 +7,7 @@ var UsersSchema = new Schema({
 	'password': String,
 	'pfppath': String,
 	'signupdate': Date,
+	'lastrefresh': Date,
 	'bookmarks': [{
 		'bookmark': {
 			type: Schema.Types.ObjectId,
