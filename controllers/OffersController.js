@@ -1,6 +1,9 @@
 var OffersModel = require('../models/OffersModel.js');
 const NodeGeocoder = require('node-geocoder');
-
+const options = {
+    provider: 'openstreetmap'
+};
+const geocoder = NodeGeocoder(options);
 /**
  * OffersController.js
  *
@@ -59,56 +62,61 @@ module.exports = {
      * OffersController.create()
      */
     createManual: function (req, res) {
-        var Offers = new OffersModel({
-            name: req.body.name,
-            description: req.body.description,
-            price: req.body.price,
-            postDate: req.body.postDate,
-            available: req.body.available,
-            pictures: req.body.pictures,
-            originSite: req.body.originSite,
-            location: req.body.location,
-            latitude: req.body.latitude,
-            longitude: req.body.longitude
-        });
+        geocoder.geocode(req.body.location, function (err, res2) {
+            var Offers = new OffersModel({
+                name: req.body.name,
+                description: req.body.description,
+                price: req.body.price,
+                postDate: req.body.postDate,
+                available: req.body.available,
+                pictures: req.body.pictures,
+                originSite: req.body.originSite,
+                location: req.body.location,
+                latitude: res2[0].latitude,
+                longitude: res2[0].longitude
+            });
 
-        Offers.save(function (err, Offers) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when creating Offers',
-                    error: err
-                });
-            }
+            Offers.save(function (err, Offers) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when creating Offers',
+                        error: err
+                    });
+                }
 
-            return res.status(201).json(Offers);
+                return res.status(201).json(Offers);
+            });
         });
     },
 
     createAutomatic: function (req, res) {
-        var Offers = new OffersModel({
-            name: req.body.name,
-            description: req.body.description,
-            price: req.body.price,
-            postDate: req.body.postDate,
-            scrapeDate: req.body.scrapeDate,
-            linkToOriginal: req.body.linkToOriginal,
-            available: req.body.available,
-            pictures: req.body.pictures,
-            originSite: req.body.originSite,
-            location: req.body.location,
-            latitude: req.body.latitude,
-            longitude: req.body.longitude
-        });
+        geocoder.geocode(req.body.location, function (err, res2) {
+            console.log(res2)
+            var Offers = new OffersModel({
+                name: req.body.name,
+                description: req.body.description,
+                price: req.body.price,
+                postDate: req.body.postDate,
+                scrapeDate: req.body.scrapeDate,
+                linkToOriginal: req.body.linkToOriginal,
+                available: req.body.available,
+                pictures: req.body.pictures,
+                originSite: req.body.originSite,
+                location: req.body.location,
+                latitude: res2[0].latitude,
+                longitude: res2[0].longitude
+            });
 
-        Offers.save(function (err, Offers) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when creating Offers',
-                    error: err
-                });
-            }
+            Offers.save(function (err, Offers) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when creating Offers',
+                        error: err
+                    });
+                }
 
-            return res.status(201).json(Offers);
+                return res.status(201).json(Offers);
+            });
         });
     },
 
