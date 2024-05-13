@@ -135,5 +135,19 @@ module.exports = {
 
             return res.status(204).json();
         });
+    },
+
+    addInterest:function(req,res){
+        var id = req.query.id;
+        var interest = { interest: req.query.interest };
+        UsersModel.updateOne({_id: id}, {$push: {interested:interest}}, function(err,result){
+            if(err){
+                console.log(err);
+                return res.status(500).json({ error: "Internal server error" });
+            }else{
+                return res.status(204).json()
+            }
+        });
+
     }
 };

@@ -10,6 +10,7 @@ router.get('/:id', UsersController.show);
 
 
 router.post('/', UsersController.create);
+router.post('/interested/', UsersController.addInterest);
 
 
 router.put('/:id', UsersController.update);
