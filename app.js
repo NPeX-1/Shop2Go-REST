@@ -14,6 +14,7 @@ const {
   csrfSynchronisedProtection, // This is the default CSRF protection middleware.
 } = csrfSync();
 
+var { expressjwt: jwt } = require("express-jwt");
 
 var mongoose = require('mongoose');
 //var mongoDB = "mongodb://mongo:27017/shop2go"
@@ -54,6 +55,13 @@ app.use(function (req, res, next) {
   res.locals.session = req.session;
   next();
 });
+
+/*app.use(
+  jwt({
+    secret: "secretKey231342345t94809dscjnhiks",
+    algorithms: ["HS256"],
+  })
+);*/
 
 
 app.use('/', indexRouter);
