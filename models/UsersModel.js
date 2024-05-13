@@ -22,7 +22,8 @@ var UsersSchema = new Schema({
 		'action': {
 			type: Schema.Types.ObjectId,
 			ref: 'Offers'
-		}
+		},
+		'update': Boolean
 	}],
 	'history': [{
 		'action': {
