@@ -16,8 +16,17 @@ var OffersSchema = new Schema({
 	}],
 	'originSite': String,
 	'location': String,
-	'latitude': Number,
-	'longitude': Number
+	'geodata': {
+		'type': {
+			type: String,
+			default: 'Point',
+		},
+		coordinates: {
+			type: [Number],
+			default: undefined,
+			required: true
+		}
+	}
 });
 
 module.exports = mongoose.model('Offers', OffersSchema);
