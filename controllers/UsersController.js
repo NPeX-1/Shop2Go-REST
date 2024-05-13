@@ -61,7 +61,7 @@ module.exports = {
             }
             var newPosts = [];
             for (var i = 0; i < Users.interested.length; i++) {
-                var words = Users.interested[i].interest.split(" ");
+                var words = Users.interested[i].split(" ");
                 while (words.length < 4) {
                     words.push("");
                 }
@@ -202,6 +202,21 @@ module.exports = {
             }
 
             return res.status(204).json();
+        });
+    },
+
+    removeWishlistItem: function (req, res) {
+        var id = req.params.id;
+
+        UsersModel.findOneAndUpdate({ _id: id }, { $pull: { interested: req.body.toRemove } }, { new: true }, function (err, Users) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when deleting the Users.',
+                    error: err
+                });
+            }
+
+            return res.status(200).json(Users);
         });
     }
 };

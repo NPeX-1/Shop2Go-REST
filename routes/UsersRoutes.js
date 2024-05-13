@@ -18,6 +18,7 @@ router.post('/', recaptcha.middleware.verify, UsersController.create);
 router.put('/:id', UsersController.update);
 
 
+router.delete('/wishlist', UsersController.removeWishlistItem);
 router.delete('/:id', UsersController.remove);
 
 module.exports = router;

@@ -14,11 +14,7 @@ var UsersSchema = new Schema({
 			ref: 'Offers'
 		}
 	}],
-	'interested': [{
-		'interest': {
-			type: String,
-		}
-	}],
+	'interested': [String],
 	'interestedReplies': [{
 		'action': {
 			type: Schema.Types.ObjectId,
