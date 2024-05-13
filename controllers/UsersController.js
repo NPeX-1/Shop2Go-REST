@@ -58,6 +58,8 @@ module.exports = {
             signupdate: new Date(Date.now()).toISOString(),
             bookmarks: Array[null],
             interested: Array[null],
+            interestedReplies: Array[null],
+            history: Array[null],
             admin: req.query.admin
         });
         console.log(Users);
@@ -97,9 +99,11 @@ module.exports = {
             Users.username = req.body.username ? req.body.username : Users.username;
             Users.password = req.body.password ? req.body.password : Users.password;
             Users.pfppath = req.body.pfppath ? req.body.pfppath : Users.pfppath;
-            Users.signupdate = req.body.signupdate ? req.body.signupdate : Users.signupdate;
-            Users.bookmarks = req.body.bookmarks ? req.body.bookmarks : Users.bookmarks;
-            Users.interested = req.body.interested ? req.body.interested : Users.interested;
+            Users.signupdate = Users.signupdate;
+            Users.bookmarks =  Users.bookmarks;
+            Users.interested = Users.interested;
+            Users.interestedReplies = Users.interestedReplies;
+            Users.history = Users.history;
             Users.admin = req.body.admin ? req.body.admin : Users.admin;
 
             Users.save(function (err, Users) {
