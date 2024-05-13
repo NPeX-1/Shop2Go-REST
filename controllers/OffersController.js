@@ -1,4 +1,5 @@
 var OffersModel = require('../models/OffersModel.js');
+const NodeGeocoder = require('node-geocoder');
 
 /**
  * OffersController.js
@@ -11,7 +12,7 @@ module.exports = {
      * OffersController.list()
      */
     list: function (req, res) {
-	var query = req.query.query;
+        var query = req.query.query;
 
         var searchQuery = {};
 
@@ -36,7 +37,7 @@ module.exports = {
     show: function (req, res) {
         var id = req.params.id;
 
-        OffersModel.findOne({_id: id}, function (err, Offers) {
+        OffersModel.findOne({ _id: id }, function (err, Offers) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
@@ -57,20 +58,46 @@ module.exports = {
     /**
      * OffersController.create()
      */
-    create: function (req, res) {
+    createManual: function (req, res) {
         var Offers = new OffersModel({
-			name : req.body.name,
-			description : req.body.description,
-			price : req.body.price,
-			postDate : req.body.postDate,
-			scrapeDate : req.body.scrapeDate,
-			linkToOriginal : req.body.linkToOriginal,
-			available : req.body.available,
-			pictures : req.body.pictures,
-			originSite : req.body.originSite,
-			location : req.body.location,
-			latitude : req.body.latitude,
-			longitude : req.body.longitude
+            name: req.body.name,
+            description: req.body.description,
+            price: req.body.price,
+            postDate: req.body.postDate,
+            available: req.body.available,
+            pictures: req.body.pictures,
+            originSite: req.body.originSite,
+            location: req.body.location,
+            latitude: req.body.latitude,
+            longitude: req.body.longitude
+        });
+
+        Offers.save(function (err, Offers) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when creating Offers',
+                    error: err
+                });
+            }
+
+            return res.status(201).json(Offers);
+        });
+    },
+
+    createAutomatic: function (req, res) {
+        var Offers = new OffersModel({
+            name: req.body.name,
+            description: req.body.description,
+            price: req.body.price,
+            postDate: req.body.postDate,
+            scrapeDate: req.body.scrapeDate,
+            linkToOriginal: req.body.linkToOriginal,
+            available: req.body.available,
+            pictures: req.body.pictures,
+            originSite: req.body.originSite,
+            location: req.body.location,
+            latitude: req.body.latitude,
+            longitude: req.body.longitude
         });
 
         Offers.save(function (err, Offers) {
@@ -91,7 +118,7 @@ module.exports = {
     update: function (req, res) {
         var id = req.params.id;
 
-        OffersModel.findOne({_id: id}, function (err, Offers) {
+        OffersModel.findOne({ _id: id }, function (err, Offers) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers',
@@ -106,18 +133,18 @@ module.exports = {
             }
 
             Offers.name = req.body.name ? req.body.name : Offers.name;
-			Offers.description = req.body.description ? req.body.description : Offers.description;
-			Offers.price = req.body.price ? req.body.price : Offers.price;
-			Offers.postDate = req.body.postDate ? req.body.postDate : Offers.postDate;
-			Offers.scrapeDate = req.body.scrapeDate ? req.body.scrapeDate : Offers.scrapeDate;
-			Offers.linkToOriginal = req.body.linkToOriginal ? req.body.linkToOriginal : Offers.linkToOriginal;
-			Offers.available = req.body.available ? req.body.available : Offers.available;
-			Offers.pictures = req.body.pictures ? req.body.pictures : Offers.pictures;
-			Offers.originSite = req.body.originSite ? req.body.originSite : Offers.originSite;
-			Offers.location = req.body.location ? req.body.location : Offers.location;
-			Offers.latitude = req.body.latitude ? req.body.latitude : Offers.latitude;
-			Offers.longitude = req.body.longitude ? req.body.longitude : Offers.longitude;
-			
+            Offers.description = req.body.description ? req.body.description : Offers.description;
+            Offers.price = req.body.price ? req.body.price : Offers.price;
+            Offers.postDate = req.body.postDate ? req.body.postDate : Offers.postDate;
+            Offers.scrapeDate = req.body.scrapeDate ? req.body.scrapeDate : Offers.scrapeDate;
+            Offers.linkToOriginal = req.body.linkToOriginal ? req.body.linkToOriginal : Offers.linkToOriginal;
+            Offers.available = req.body.available ? req.body.available : Offers.available;
+            Offers.pictures = req.body.pictures ? req.body.pictures : Offers.pictures;
+            Offers.originSite = req.body.originSite ? req.body.originSite : Offers.originSite;
+            Offers.location = req.body.location ? req.body.location : Offers.location;
+            Offers.latitude = req.body.latitude ? req.body.latitude : Offers.latitude;
+            Offers.longitude = req.body.longitude ? req.body.longitude : Offers.longitude;
+
             Offers.save(function (err, Offers) {
                 if (err) {
                     return res.status(500).json({

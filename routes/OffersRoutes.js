@@ -15,7 +15,8 @@ router.get('/:id', OffersController.show);
 /*
  * POST
  */
-router.post('/', OffersController.create);
+router.post('/', OffersController.createManual);
+router.post('/scrape', OffersController.createAutomatic);
 
 /*
  * PUT
