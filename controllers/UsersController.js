@@ -296,5 +296,30 @@ module.exports = {
 
             return res.status(200).json(Users);
         });
+    },
+
+    login: function (req, res, next) {
+        UsersModel.authenticate(req.body.username, req.body.password, function (err, user) {
+            if (err || !user) {
+                var err = new Error('Wrong username or paassword');
+                err.status = 401;
+                return next(err);
+            }
+            req.session.userId = user._id;
+            return res.json(user);
+        });
+    },
+
+
+    logout: function (req, res, next) {
+        if (req.session) {
+            req.session.destroy(function (err) {
+                if (err) {
+                    return next(err);
+                } else {
+                    return res.status(200).json({});
+                }
+            });
+        }
     }
 };
