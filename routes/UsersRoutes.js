@@ -6,8 +6,8 @@ var recaptcha = new Recaptcha('6LcqTtspAAAAAE0QJruQ6T5V_jegb87IZmrEuLRQ', '6LcqT
 
 router.get('/', UsersController.list);
 
-router.get('/bookmarks', User.Controller.bookmarks);
-router.get('/wishlist', User.Controller.wishlist);
+router.get('/bookmarks', UsersController.bookmarks);
+router.get('/wishlist', UsersController.wishlist);
 router.get('/:id', UsersController.show);
 
 
