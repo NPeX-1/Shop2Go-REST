@@ -16,6 +16,7 @@ function requiresLogin(req, res, next) {
  * GET
  */
 router.get('/', OffersController.list);
+router.get('/search', OffersController.search);
 
 /*
  * GET
