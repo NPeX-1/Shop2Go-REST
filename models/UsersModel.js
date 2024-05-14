@@ -9,10 +9,8 @@ var UsersSchema = new Schema({
 	'signupdate': Date,
 	'lastrefresh': Date,
 	'bookmarks': [{
-		'bookmark': {
-			type: Schema.Types.ObjectId,
-			ref: 'Offers'
-		}
+		type: Schema.Types.ObjectId,
+		ref: 'Offers'
 	}],
 	'interested': [String],
 	'interestedReplies': [{
@@ -22,11 +20,7 @@ var UsersSchema = new Schema({
 		},
 		'update': Boolean
 	}],
-	'history': [{
-		'action': {
-			type: String,
-		}
-	}],
+	'history': [String],
 	'admin': Boolean
 });
 
