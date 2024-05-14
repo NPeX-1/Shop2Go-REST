@@ -113,6 +113,64 @@ module.exports = {
         });
     },
 
+
+    bookmarks: function (req, res) {
+        var id = req.session.userId;
+
+        UsersModel.findOne({ _id: id }, function (err, Users) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when getting Users.',
+                    error: err
+                });
+            }
+            OffersModel.find({
+                "$and": [{ "available": false },
+                { "postTime": { "$gt": Date(Date.now()).toISOString(), } }]
+            }, function (err, Offers) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when getting Bookamrks.',
+                        error: err
+                    });
+                }
+
+                for (offer in Offers) {
+                    var objInterest = {
+                        action: ObjectId(offer._id),
+                        update: true
+                    };
+                    newPosts.push(objInterest);
+                }
+
+
+            });
+            if (!Users) {
+                return res.status(404).json({
+                    message: 'No such Bookmarked Items Yet'
+                });
+            }
+
+            UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: { $each: newPosts } } }, { new: true }).populate("interestedReplies.action").populate("bookmarks.bookmark").exec(function (err, Users2) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when getting Users.',
+                        error: err
+                    });
+                }
+
+                if (!Users2) {
+                    return res.status(404).json({
+                        message: 'No such Users'
+                    });
+                }
+
+                return res.json(Users2);
+            });
+        });
+    },
+
+
     /**
      * UsersController.create()
      */
