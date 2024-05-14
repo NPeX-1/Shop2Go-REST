@@ -45,7 +45,7 @@ jobs:
       - name: Webhook
         uses: indiesdev/curl@v1.1
         with:
-          url: https://172.211.46.40/v1/update
+          url: http://172.211.46.40:8080/v1/update
           method: "POST"
           accept: 200,201,204
           timeout: 60000
