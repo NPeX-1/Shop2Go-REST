@@ -38,10 +38,6 @@ module.exports = {
         var query = req.body.query.split(" ");
         var geoquery = req.body.geoquery;
 
-
-        if (query) {
-            searchQuery.$text = { $search: query };
-        }
         OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[geoquery.x, geoquery.y], geoquery.distance / 3963.2] } }, name: { $in: query } }, function (err, Offerss) {
             if (err) {
                 return res.status(500).json({
