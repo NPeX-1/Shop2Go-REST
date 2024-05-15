@@ -9,6 +9,7 @@ router.get('/', UsersController.list);
 router.get('/bookmarks', UsersController.bookmarks);
 router.get('/wishlist', UsersController.wishlist);
 router.get('/:id', UsersController.show);
+router.get('/logout', UsersController.logout);
 
 
 
@@ -18,6 +19,7 @@ router.post('/interested/', UsersController.addInterest);
 
 router.post('/', recaptcha.middleware.verify, UsersController.create);
 router.post('/bookmarks/:id', recaptcha.middleware.verify, UsersController.createBookmark);
+router.post('/login', UsersController.login);
 
 
 

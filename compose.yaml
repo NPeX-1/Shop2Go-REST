@@ -17,7 +17,7 @@ services:
                - '27018:27017'
 
   app-monitored-by-watchtower:
-    image: malachivolta/shop2go-rest
+    image: malachivolta/shop2go-rest:release
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
