@@ -285,6 +285,20 @@ module.exports = {
         });
     },
 
+
+    addInterest:function(req,res){
+        var id = req.query.id;
+        var interest = { interest: req.query.interest };
+        UsersModel.updateOne({_id: id}, {$push: {interested:interest}}, function(err,result){
+            if(err){
+                console.log(err);
+                return res.status(500).json({ error: "Internal server error" });
+            }else{
+                return res.status(204).json()
+            }
+        });
+
+
     removeWishlistItem: function (req, res) {
         var id = req.params.id;
 
@@ -298,6 +312,7 @@ module.exports = {
 
             return res.status(200).json(Users);
         });
+
     },
 
     login: function (req, res, next) {
@@ -323,5 +338,6 @@ module.exports = {
                 }
             });
         }
+
     }
 };
