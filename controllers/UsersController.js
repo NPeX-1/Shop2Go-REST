@@ -175,10 +175,12 @@ module.exports = {
      * UsersController.create()
      */
     create: function (req, res) {
+        var pfp = "";
+        req.file == undefined ? pfp = "" : "/images/profilepics/" + req.file.filename;
         var Users = new UsersModel({
             username: req.query.username,
             password: req.query.password,
-            pfppath: req.query.pfppath,
+            pfppath: pfp,
             signupdate: new Date(Date.now()).toISOString(),
             lastrefresh: new Date(Date.now()).toISOString(),
             bookmarks: Array[null],

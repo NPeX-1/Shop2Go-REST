@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var OffersController = require('../controllers/OffersController.js');
+var multer = require('multer');
+var upload = multer({ dest: 'public/images/' });
 
 
 function requiresLogin(req, res, next) {
@@ -26,7 +28,7 @@ router.get('/:id', OffersController.show);
 /*
  * POST
  */
-router.post('/', requiresLogin, OffersController.createManual);
+router.post('/',/* requiresLogin,*/ upload.single('image'), OffersController.createManual);
 router.post('/scrape', OffersController.createAutomatic);
 
 /*

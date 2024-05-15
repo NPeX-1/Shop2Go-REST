@@ -36,9 +36,13 @@ module.exports = {
 
     search: function (req, res) {
         var query = req.body.query.split(" ");
-        var geoquery = req.body.geoquery;
-
-        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[geoquery.x, geoquery.y], geoquery.distance / 3963.2] } }, name: { $in: query } }, function (err, Offerss) {
+        var regex = "";
+        for (var i = 0; i < query.length; i++) {
+            regex += "(?=.*" + query[i] + "\\b)"
+        }
+        regex += ".*";
+        console.log(regex);
+        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[req.body.x, req.body.y], req.body.distance / 3963.2] } }, "name": { $regex: regex, $options: "i" } }, function (err, Offerss) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
@@ -85,13 +89,15 @@ module.exports = {
                 coordinates: [res2[0].latitude, res2[0].longitude],
             };
 
+            var image = "";
+            req.file == undefined ? image = "" : "/images/" + req.file.filename;
             var Offers = new OffersModel({
                 name: req.body.name,
                 description: req.body.description,
                 price: req.body.price,
-                postDate: req.body.postDate,
+                postDate: new Date(Date.now()).toISOString(),
                 available: req.body.available,
-                pictures: req.body.pictures,
+                pictures: image,
                 originSite: req.body.originSite,
                 location: req.body.location,
                 geodata: userCoordinates
@@ -121,7 +127,7 @@ module.exports = {
                 description: req.body.description,
                 price: req.body.price,
                 postDate: req.body.postDate,
-                scrapeDate: req.body.scrapeDate,
+                scrapeDate: new Date(Date.now()).toISOString(),
                 linkToOriginal: req.body.linkToOriginal,
                 available: req.body.available,
                 pictures: req.body.pictures,

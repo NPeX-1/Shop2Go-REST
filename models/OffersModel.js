@@ -9,11 +9,7 @@ var OffersSchema = new Schema({
 	'scrapeDate': Date,
 	'linkToOriginal': String,
 	'available': Boolean,
-	'pictures': [{
-		'picture': {
-			type: String
-		}
-	}],
+	'pictures': [String],
 	'originSite': String,
 	'location': String,
 	'geodata': {
