@@ -7,28 +7,20 @@ var UsersSchema = new Schema({
 	'password': String,
 	'pfppath': String,
 	'signupdate': Date,
+	'lastrefresh': Date,
 	'bookmarks': [{
-		'bookmark': {
-			type: Schema.Types.ObjectId,
-			ref: 'Offers'
-		}
+		type: Schema.Types.ObjectId,
+		ref: 'Offers'
 	}],
-	'interested': [{
-		'interest': {
-			type: String,
-		}
-	}],
+	'interested': [String],
 	'interestedReplies': [{
 		'action': {
 			type: Schema.Types.ObjectId,
 			ref: 'Offers'
-		}
+		},
+		'update': Boolean
 	}],
-	'history': [{
-		'action': {
-			type: String,
-		}
-	}],
+	'history': [String],
 	'admin': Boolean
 });
 

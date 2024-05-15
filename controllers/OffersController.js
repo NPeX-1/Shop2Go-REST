@@ -63,6 +63,11 @@ module.exports = {
      */
     createManual: function (req, res) {
         geocoder.geocode(req.body.location, function (err, res2) {
+            const userCoordinates = {
+                type: "Point",
+                coordinates: [res2[0].latitude, res2[0].longitude],
+            };
+
             var Offers = new OffersModel({
                 name: req.body.name,
                 description: req.body.description,
@@ -72,8 +77,7 @@ module.exports = {
                 pictures: req.body.pictures,
                 originSite: req.body.originSite,
                 location: req.body.location,
-                latitude: res2[0].latitude,
-                longitude: res2[0].longitude
+                geodata: userCoordinates
             });
 
             Offers.save(function (err, Offers) {
@@ -91,7 +95,10 @@ module.exports = {
 
     createAutomatic: function (req, res) {
         geocoder.geocode(req.body.location, function (err, res2) {
-            console.log(res2)
+            const userCoordinates = {
+                type: "Point",
+                coordinates: [res2[0].latitude, res2[0].longitude],
+            };
             var Offers = new OffersModel({
                 name: req.body.name,
                 description: req.body.description,
@@ -103,8 +110,7 @@ module.exports = {
                 pictures: req.body.pictures,
                 originSite: req.body.originSite,
                 location: req.body.location,
-                latitude: res2[0].latitude,
-                longitude: res2[0].longitude
+                geodata: userCoordinates
             });
 
             Offers.save(function (err, Offers) {
