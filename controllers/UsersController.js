@@ -286,18 +286,18 @@ module.exports = {
     },
 
 
-    addInterest:function(req,res){
+    addInterest: function (req, res) {
         var id = req.query.id;
         var interest = { interest: req.query.interest };
-        UsersModel.updateOne({_id: id}, {$push: {interested:interest}}, function(err,result){
-            if(err){
+        UsersModel.updateOne({ _id: id }, { $push: { interested: interest } }, function (err, result) {
+            if (err) {
                 console.log(err);
                 return res.status(500).json({ error: "Internal server error" });
-            }else{
+            } else {
                 return res.status(204).json()
             }
         });
-
+    },
 
     removeWishlistItem: function (req, res) {
         var id = req.params.id;
