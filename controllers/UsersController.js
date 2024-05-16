@@ -288,7 +288,7 @@ module.exports = {
 
     addInterest: function (req, res) {
         var id = req.query.id;
-        var interest = { interest: req.query.interest };
+        var interest = req.query.interest;
         UsersModel.updateOne({ _id: id }, { $push: { interested: interest } }, function (err, result) {
             if (err) {
                 console.log(err);
