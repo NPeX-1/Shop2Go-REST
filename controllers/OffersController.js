@@ -36,9 +36,9 @@ module.exports = {
 
     search: function (req, res) {
         var query = req.body.query.split(" ");
-        var regex = "";
+        var regex = ".*";
         for (var i = 0; i < query.length; i++) {
-            regex += "(?=.*" + query[i] + "\\b)"
+            regex += "(?=.*" + query[i] + "\\b).*"
         }
         regex += ".*";
         console.log(regex);
