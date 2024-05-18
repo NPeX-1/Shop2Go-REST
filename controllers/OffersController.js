@@ -17,6 +17,54 @@ const options = {
     provider: 'openstreetmap'
 };
 const geocoder = NodeGeocoder(options);
+
+const puppeteer = require('puppeteer');
+const cron = require('node-cron');
+
+let scraperStatus = {
+    lastRun: null,
+    isRunning: false,
+    error: null
+};
+
+async function scrapeData() {
+    scraperStatus.isRunning = true;
+    scraperStatus.lastRun = new Date();
+
+    try {
+        const browser = await puppeteer.launch();
+        const page = await browser.newPage();
+        await page.goto('https://www.ceneje.si/', { waitUntil: 'networkidle2' });
+
+        const data = await page.evaluate(() => {
+            let results = [];
+            let items = document.querySelectorAll('.product');
+
+            items.forEach((item) => {
+                results.push({
+                    name: item.querySelector('.product-title')?.innerText,
+                    price: item.querySelector('.product-price')?.innerText,
+                    link: item.querySelector('a')?.href
+                });
+            });
+            return results;
+        });
+
+        console.log(data);
+
+        await browser.close();
+        scraperStatus.error = null;
+    } catch (error) {
+        scraperStatus.error = error.message;
+    }
+
+    scraperStatus.isRunning = false;
+}
+
+cron.schedule('*/5 * * * *', () => {
+    scrapeData();
+});
+
 /**
  * OffersController.js
  *
