@@ -187,7 +187,24 @@ module.exports = {
                     });
                 }
 
-                return res.status(201).json(Offers);
+                var userId = req.session.userId;
+                if (userId) {
+                    UsersModel.findByIdAndUpdate(userId, {
+                        $push: {
+                            history: {
+                                offerId: offer._id,
+                                action: 'create',
+                                actionTime: new Date()
+                            }
+                        }
+                    }, function (err, user) {
+                        if (err) {
+                            console.error('Error when updating user history:', err);
+                        }
+                    });
+                }
+    
+                return res.status(201).json(offer);
             });
         });
     },
@@ -220,7 +237,24 @@ module.exports = {
                     });
                 }
 
-                return res.status(201).json(Offers);
+                var userId = req.session.userId;
+                if (userId) {
+                    UsersModel.findByIdAndUpdate(userId, {
+                        $push: {
+                            history: {
+                                offerId: offer._id,
+                                action: 'create',
+                                actionTime: new Date()
+                            }
+                        }
+                    }, function (err, user) {
+                        if (err) {
+                            console.error('Error when updating user history:', err);
+                        }
+                    });
+                }
+    
+                return res.status(201).json(offer);
             });
         });
     },
