@@ -18,7 +18,7 @@ function requiresLogin(req, res, next) {
  * GET
  */
 router.get('/', OffersController.list);
-router.get('/search', OffersController.search);
+router.get('/search', requiresLogin, OffersController.search);
 router.get('/scraper-status', OffersController.getScraperStatus);
 
 /*

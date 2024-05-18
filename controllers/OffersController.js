@@ -111,11 +111,26 @@ module.exports = {
                 });
             }
 
+            var userId = req.session.userId;
+            if (userId) {
+                UsersModel.findByIdAndUpdate(userId, {
+                    $push: {
+                        history: {
+                            searchQuery: req.body.query,
+                            searchTime: new Date()
+                        }
+                    }
+                }, function (err, user) {
+                    if (err) {
+                        console.error('Error when updating user history:', err);
+                    }
+                });
+            }
+
             return res.json(Offerss);
         });
     },
-
-
+    
     /**
      * OffersController.show()
      */
