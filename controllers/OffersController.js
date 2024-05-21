@@ -21,49 +21,6 @@ const geocoder = NodeGeocoder(options);
 const puppeteer = require('puppeteer');
 const cron = require('node-cron');
 
-let scraperStatus = {
-    lastRun: null,
-    isRunning: false,
-    error: null
-};
-
-async function scrapeData() {
-    scraperStatus.isRunning = true;
-    scraperStatus.lastRun = new Date();
-
-    try {
-        const browser = await puppeteer.launch();
-        const page = await browser.newPage();
-        await page.goto('https://www.ceneje.si/', { waitUntil: 'networkidle2' });
-
-        const data = await page.evaluate(() => {
-            let results = [];
-            let items = document.querySelectorAll('.product');
-
-            items.forEach((item) => {
-                results.push({
-                    name: item.querySelector('.product-title')?.innerText,
-                    price: item.querySelector('.product-price')?.innerText,
-                    link: item.querySelector('a')?.href
-                });
-            });
-            return results;
-        });
-
-        console.log(data);
-
-        await browser.close();
-        scraperStatus.error = null;
-    } catch (error) {
-        scraperStatus.error = error.message;
-    }
-
-    scraperStatus.isRunning = false;
-}
-
-cron.schedule('*/5 * * * *', () => {
-    scrapeData();
-});
 
 /**
  * OffersController.js
@@ -257,6 +214,33 @@ module.exports = {
                 return res.status(201).json(offer);
             });
         });
+    },
+
+    timeToNextScrape: async function (req, res) {
+        try {
+            const latestOffer = await OffersModel.findOne().sort({ scrapeDate: -1 }).exec();
+            if (!latestOffer) {
+                return res.status(404).json({
+                    message: 'No offers found.'
+                });
+            }
+
+            const latestScrapeDate = new Date(latestOffer.scrapeDate);
+            const currentTime = new Date();
+            const timeDifference = currentTime - latestScrapeDate;
+            const tenMinutes = 10 * 60 * 1000;
+            const timeToNextScrape = tenMinutes - timeDifference;
+
+            return res.json({
+                timeToNextScrape: timeToNextScrape > 0 ? timeToNextScrape : 0
+            });
+            
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when calculating time to next scrape.',
+                error: err
+            });
+        }
     },
 
     /**
