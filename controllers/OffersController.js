@@ -1,5 +1,18 @@
 var OffersModel = require('../models/OffersModel.js');
 const NodeGeocoder = require('node-geocoder');
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/images/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
 const options = {
     provider: 'openstreetmap'
 };
@@ -55,11 +68,26 @@ module.exports = {
                 });
             }
 
+            var userId = req.session.userId;
+            if (userId) {
+                UsersModel.findByIdAndUpdate(userId, {
+                    $push: {
+                        history: {
+                            searchQuery: req.body.query,
+                            searchTime: new Date()
+                        }
+                    }
+                }, function (err, user) {
+                    if (err) {
+                        console.error('Error when updating user history:', err);
+                    }
+                });
+            }
+
             return res.json(Offerss);
         });
     },
-
-
+    
     /**
      * OffersController.show()
      */
@@ -116,7 +144,24 @@ module.exports = {
                     });
                 }
 
-                return res.status(201).json(Offers);
+                var userId = req.session.userId;
+                if (userId) {
+                    UsersModel.findByIdAndUpdate(userId, {
+                        $push: {
+                            history: {
+                                offerId: offer._id,
+                                action: 'create',
+                                actionTime: new Date()
+                            }
+                        }
+                    }, function (err, user) {
+                        if (err) {
+                            console.error('Error when updating user history:', err);
+                        }
+                    });
+                }
+    
+                return res.status(201).json(offer);
             });
         });
     },
@@ -149,7 +194,24 @@ module.exports = {
                     });
                 }
 
-                return res.status(201).json(Offers);
+                var userId = req.session.userId;
+                if (userId) {
+                    UsersModel.findByIdAndUpdate(userId, {
+                        $push: {
+                            history: {
+                                offerId: offer._id,
+                                action: 'create',
+                                actionTime: new Date()
+                            }
+                        }
+                    }, function (err, user) {
+                        if (err) {
+                            console.error('Error when updating user history:', err);
+                        }
+                    });
+                }
+    
+                return res.status(201).json(offer);
             });
         });
     },

@@ -20,7 +20,6 @@ function requiresLogin(req, res, next) {
 router.get('/', OffersController.list);
 router.get('/search', OffersController.search);
 router.get('/next-scrape-time', OffersController.timeToNextScrape);
-
 /*
  * GET
  */
