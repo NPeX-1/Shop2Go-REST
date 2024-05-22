@@ -18,9 +18,6 @@ const options = {
 };
 const geocoder = NodeGeocoder(options);
 
-const puppeteer = require('puppeteer');
-const cron = require('node-cron');
-
 
 /**
  * OffersController.js
