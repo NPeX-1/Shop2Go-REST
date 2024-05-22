@@ -12,9 +12,8 @@ module.exports = {
      * LogsController.show()
      */
     show: function (req, res) {
-        var id = req.params.id;
 
-        LogsModel.findOne({ _id: id }, function (err, Logs) {
+        LogsModel.findOne().sort({ logDate: -1 }).exec(function (err, Logs) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Logs.',
