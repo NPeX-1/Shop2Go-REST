@@ -6,6 +6,17 @@ var recaptcha = new Recaptcha('6LcqTtspAAAAAE0QJruQ6T5V_jegb87IZmrEuLRQ', '6LcqT
 var multer = require('multer');
 var upload = multer({ dest: 'public/images/profilepics' });
 
+
+function requiresLogin(req, res, next) {
+    if (req.session && req.session.userId) {
+        return next();
+    } else {
+        var err = new Error("You must be logged in to view this page");
+        err.status = 401;
+        return next(err);
+    }
+}
+
 router.get('/', UsersController.list);
 
 router.get('/bookmarks', UsersController.bookmarks);
