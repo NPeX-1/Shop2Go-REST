@@ -84,7 +84,7 @@ module.exports = {
             return res.json(Offerss);
         });
     },
-    
+
     /**
      * OffersController.show()
      */
@@ -157,7 +157,7 @@ module.exports = {
                         }
                     });
                 }
-    
+
                 return res.status(201).json(offer);
             });
         });
@@ -165,10 +165,41 @@ module.exports = {
 
     createAutomatic: function (req, res) {
         geocoder.geocode(req.body.location, function (err, res2) {
-            const userCoordinates = {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when creating Offers',
+                    error: err
+                });
+            }
+
+            if (res2.length == 0) {
+                var secondTry = req.body.location.split(",")
+                geocoder.geocode(secondTry[0], function (err, res3) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when creating Offers',
+                            error: err
+                        });
+                    }
+                    res2 = res3
+                }
+                )
+            }
+
+            var userCoordinates = {
                 type: "Point",
-                coordinates: [res2[0].latitude, res2[0].longitude],
+                coordinates: [0, 0],
             };
+
+            if (res2.length != 0) {
+                console.log(res2)
+                userCoordinates = {
+                    type: "Point",
+                    coordinates: [res2[0].latitude, res2[0].longitude],
+                };
+            }
+
+
             var Offers = new OffersModel({
                 name: req.body.name,
                 description: req.body.description,
@@ -185,30 +216,14 @@ module.exports = {
 
             Offers.save(function (err, Offers) {
                 if (err) {
+                    console.log(err)
                     return res.status(500).json({
                         message: 'Error when creating Offers',
                         error: err
                     });
                 }
 
-                var userId = req.session.userId;
-                if (userId) {
-                    UsersModel.findByIdAndUpdate(userId, {
-                        $push: {
-                            history: {
-                                offerId: offer._id,
-                                action: 'create',
-                                actionTime: new Date()
-                            }
-                        }
-                    }, function (err, user) {
-                        if (err) {
-                            console.error('Error when updating user history:', err);
-                        }
-                    });
-                }
-    
-                return res.status(201).json(offer);
+                return res.status(201).json(Offers);
             });
         });
     },
@@ -231,7 +246,7 @@ module.exports = {
             return res.json({
                 timeToNextScrape: timeToNextScrape > 0 ? timeToNextScrape : 0
             });
-            
+
         } catch (err) {
             return res.status(500).json({
                 message: 'Error when calculating time to next scrape.',
