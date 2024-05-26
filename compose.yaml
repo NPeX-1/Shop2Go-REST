@@ -29,7 +29,7 @@ services:
     ports:
       - '81:80'
   app3-monitored-by-watchtower:
-    image: malachivolta/shop2go-scraper:latest
+    image: malachivolta/shop2go-webscraper:latest
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
