@@ -26,6 +26,7 @@ RUN --mount=type=bind,source=package.json,target=package.json \
     npm ci --omit=dev
 
 # Run the application as a non-root user.
+RUN sudo chmod -R 777 /home/node/app
 USER node
 
 # Copy the rest of the source files into the image.
