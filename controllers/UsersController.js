@@ -175,10 +175,12 @@ module.exports = {
      * UsersController.create()
      */
     create: function (req, res) {
+        var pfp = "";
+        req.file == undefined ? pfp = "" : "/images/profilepics/" + req.file.filename;
         var Users = new UsersModel({
             username: req.query.username,
             password: req.query.password,
-            pfppath: req.query.pfppath,
+            pfppath: pfp,
             signupdate: new Date(Date.now()).toISOString(),
             lastrefresh: new Date(Date.now()).toISOString(),
             bookmarks: Array[null],
@@ -218,6 +220,33 @@ module.exports = {
             }
 
             return res.json(Users);
+        });
+    },
+
+    getHistory: function (req, res) {
+        var userId = req.session.userId;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: 'You need to be logged in to view the history.'
+            });
+        }
+
+        UsersModel.findById(userId, function (err, user) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when getting user history.',
+                    error: err
+                });
+            }
+
+            if (!user) {
+                return res.status(404).json({
+                    message: 'User not found.'
+                });
+            }
+
+            return res.json(user.history);
         });
     },
 
@@ -283,6 +312,20 @@ module.exports = {
         });
     },
 
+
+    addInterest: function (req, res) {
+        var id = req.query.id;
+        var interest = req.query.interest;
+        UsersModel.updateOne({ _id: id }, { $push: { interested: interest } }, function (err, result) {
+            if (err) {
+                console.log(err);
+                return res.status(500).json({ error: "Internal server error" });
+            } else {
+                return res.status(204).json()
+            }
+        });
+    },
+
     removeWishlistItem: function (req, res) {
         var id = req.params.id;
 
@@ -296,6 +339,7 @@ module.exports = {
 
             return res.status(200).json(Users);
         });
+
     },
 
     login: function (req, res, next) {
@@ -321,5 +365,6 @@ module.exports = {
                 }
             });
         }
+
     }
 };

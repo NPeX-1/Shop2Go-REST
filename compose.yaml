@@ -9,17 +9,23 @@
 # https://github.com/docker/awesome-compose
 services:
   mongo:
-             container_name: mongo
-             image: mongo
-             volumes:
-               - ./data:/data/db
-             ports:
-               - '27018:27017'
+    container_name: mongo
+    image: mongo
+    volumes:
+      - ./data:/data/db
+    ports:
+      - '27018:27017'
 
   app-monitored-by-watchtower:
     image: malachivolta/shop2go-rest:release
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+  app2-monitored-by-watchtower:
+    image: malachivolta/shop2go-frontend:latest
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+    ports:
+      - '81:80'
 
   watchtower:
     image: containrrr/watchtower
@@ -27,7 +33,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: --debug --http-api-update
     environment:
-      - WATCHTOWER_HTTP_API_TOKEN=destroyerofworlds
+      - WATCHTOWER_HTTP_API_TOKEN=${WATCHTOWER}
     labels:
       - "com.centurylinklabs.watchtower.enable=false"
     ports:

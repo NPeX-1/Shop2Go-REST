@@ -20,7 +20,10 @@ var UsersSchema = new Schema({
 		},
 		'update': Boolean
 	}],
-	'history': [String],
+	'history':[{
+        searchQuery: String,
+        searchTime: Date
+    }],
 	'admin': Boolean
 });
 

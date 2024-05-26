@@ -1,9 +1,24 @@
 var OffersModel = require('../models/OffersModel.js');
 const NodeGeocoder = require('node-geocoder');
+const multer = require('multer');
+const path = require('path');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/images/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
+
 const options = {
     provider: 'openstreetmap'
 };
 const geocoder = NodeGeocoder(options);
+
+
 /**
  * OffersController.js
  *
@@ -36,9 +51,13 @@ module.exports = {
 
     search: function (req, res) {
         var query = req.body.query.split(" ");
-        var geoquery = req.body.geoquery;
-
-        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[geoquery.x, geoquery.y], geoquery.distance / 3963.2] } }, name: { $in: query } }, function (err, Offerss) {
+        var regex = ".*";
+        for (var i = 0; i < query.length; i++) {
+            regex += "(?=.*" + query[i] + "\\b).*"
+        }
+        regex += ".*";
+        console.log(regex);
+        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[req.body.x, req.body.y], req.body.distance / 3963.2] } }, "name": { $regex: regex, $options: "i" } }, function (err, Offerss) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
@@ -46,10 +65,25 @@ module.exports = {
                 });
             }
 
+            var userId = req.session.userId;
+            if (userId) {
+                UsersModel.findByIdAndUpdate(userId, {
+                    $push: {
+                        history: {
+                            searchQuery: req.body.query,
+                            searchTime: new Date()
+                        }
+                    }
+                }, function (err, user) {
+                    if (err) {
+                        console.error('Error when updating user history:', err);
+                    }
+                });
+            }
+
             return res.json(Offerss);
         });
     },
-
 
     /**
      * OffersController.show()
@@ -85,11 +119,94 @@ module.exports = {
                 coordinates: [res2[0].latitude, res2[0].longitude],
             };
 
+            var image = "";
+            req.file == undefined ? image = "" : "/images/" + req.file.filename;
+            var Offers = new OffersModel({
+                name: req.body.name,
+                description: req.body.description,
+                price: req.body.price,
+                postDate: new Date(Date.now()).toISOString(),
+                available: req.body.available,
+                pictures: image,
+                originSite: req.body.originSite,
+                location: req.body.location,
+                geodata: userCoordinates
+            });
+
+            Offers.save(function (err, Offers) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when creating Offers',
+                        error: err
+                    });
+                }
+
+                var userId = req.session.userId;
+                if (userId) {
+                    UsersModel.findByIdAndUpdate(userId, {
+                        $push: {
+                            history: {
+                                offerId: offer._id,
+                                action: 'create',
+                                actionTime: new Date()
+                            }
+                        }
+                    }, function (err, user) {
+                        if (err) {
+                            console.error('Error when updating user history:', err);
+                        }
+                    });
+                }
+
+                return res.status(201).json(offer);
+            });
+        });
+    },
+
+    createAutomatic: function (req, res) {
+        geocoder.geocode(req.body.location, function (err, res2) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when creating Offers',
+                    error: err
+                });
+            }
+
+            if (res2.length == 0) {
+                var secondTry = req.body.location.split(",")
+                geocoder.geocode(secondTry[0], function (err, res3) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when creating Offers',
+                            error: err
+                        });
+                    }
+                    res2 = res3
+                }
+                )
+            }
+
+            var userCoordinates = {
+                type: "Point",
+                coordinates: [0, 0],
+            };
+
+            if (res2.length != 0) {
+                console.log(res2)
+                userCoordinates = {
+                    type: "Point",
+                    coordinates: [res2[0].latitude, res2[0].longitude],
+                };
+            }
+
+
             var Offers = new OffersModel({
                 name: req.body.name,
                 description: req.body.description,
                 price: req.body.price,
                 postDate: req.body.postDate,
+                scrapeDate: new Date(Date.now()).toISOString(),
+                linkToOriginal: req.body.linkToOriginal,
                 available: req.body.available,
                 pictures: req.body.pictures,
                 originSite: req.body.originSite,
@@ -99,6 +216,7 @@ module.exports = {
 
             Offers.save(function (err, Offers) {
                 if (err) {
+                    console.log(err)
                     return res.status(500).json({
                         message: 'Error when creating Offers',
                         error: err
@@ -110,37 +228,31 @@ module.exports = {
         });
     },
 
-    createAutomatic: function (req, res) {
-        geocoder.geocode(req.body.location, function (err, res2) {
-            const userCoordinates = {
-                type: "Point",
-                coordinates: [res2[0].latitude, res2[0].longitude],
-            };
-            var Offers = new OffersModel({
-                name: req.body.name,
-                description: req.body.description,
-                price: req.body.price,
-                postDate: req.body.postDate,
-                scrapeDate: req.body.scrapeDate,
-                linkToOriginal: req.body.linkToOriginal,
-                available: req.body.available,
-                pictures: req.body.pictures,
-                originSite: req.body.originSite,
-                location: req.body.location,
-                geodata: userCoordinates
+    timeToNextScrape: async function (req, res) {
+        try {
+            const latestOffer = await OffersModel.findOne().sort({ scrapeDate: -1 }).exec();
+            if (!latestOffer) {
+                return res.status(404).json({
+                    message: 'No offers found.'
+                });
+            }
+
+            const latestScrapeDate = new Date(latestOffer.scrapeDate);
+            const currentTime = new Date();
+            const timeDifference = currentTime - latestScrapeDate;
+            const tenMinutes = 10 * 60 * 1000;
+            const timeToNextScrape = tenMinutes - timeDifference;
+
+            return res.json({
+                timeToNextScrape: timeToNextScrape > 0 ? timeToNextScrape : 0
             });
 
-            Offers.save(function (err, Offers) {
-                if (err) {
-                    return res.status(500).json({
-                        message: 'Error when creating Offers',
-                        error: err
-                    });
-                }
-
-                return res.status(201).json(Offers);
+        } catch (err) {
+            return res.status(500).json({
+                message: 'Error when calculating time to next scrape.',
+                error: err
             });
-        });
+        }
     },
 
     /**
