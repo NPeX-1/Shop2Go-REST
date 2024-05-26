@@ -25,9 +25,8 @@ RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev
 
-RUN adduser -ms /bin/bash node
-RUN chown -R node:node /app
-RUN chmod 755 /app
+RUN chown -R node:node /usr/src/app
+RUN chmod 755 /usr/src/app
 # Run the application as a non-root user.
 USER node
 
