@@ -24,9 +24,11 @@ RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev
-
+    
+RUN useradd -ms /bin/bash node
+RUN chown -R node:node /app
+RUN chmod 755 /app
 # Run the application as a non-root user.
-RUN sudo chmod -R 777 /home/node/app
 USER node
 
 # Copy the rest of the source files into the image.
