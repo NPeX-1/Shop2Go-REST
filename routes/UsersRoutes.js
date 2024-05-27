@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var UsersController = require('../controllers/UsersController.js');
 var Recaptcha = require('express-recaptcha').RecaptchaV3
-var recaptcha = new Recaptcha('6LcqTtspAAAAAE0QJruQ6T5V_jegb87IZmrEuLRQ', '6LcqTtspAAAAAMkultau9skecTPiDCAaB-uqdYF0')
+var recaptcha = new Recaptcha('6LeOzNIpAAAAANvIOeeILUXdJHFdNxVTcwYBKdoE', '6LeOzNIpAAAAAO9XTv1zDXAexMHZSwTgnpw9y_mn')
 var multer = require('multer');
 var upload = multer({ dest: 'public/images/profilepics' });
 
@@ -21,13 +21,14 @@ router.get('/', UsersController.list);
 
 router.get('/bookmarks', UsersController.bookmarks);
 router.get('/wishlist', UsersController.wishlist);
-router.get('/:id', UsersController.show);
 router.get('/logout', UsersController.logout);
 router.get('/history', requiresLogin, UsersController.getHistory);
+router.get('/:id', UsersController.show);
+
 
 router.post('/interested/', UsersController.addInterest);
 
-router.post('/'/*, recaptcha.middleware.verify*/, upload.single('image'), UsersController.create);
+router.post('/', recaptcha.middleware.verify, upload.single('image'), UsersController.create);
 router.post('/bookmarks/:id', recaptcha.middleware.verify, UsersController.createBookmark);
 router.post('/login', UsersController.login);
 

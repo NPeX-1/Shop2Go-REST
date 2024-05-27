@@ -178,8 +178,8 @@ module.exports = {
         var pfp = "";
         req.file == undefined ? pfp = "" : "/images/profilepics/" + req.file.filename;
         var Users = new UsersModel({
-            username: req.query.username,
-            password: req.query.password,
+            username: req.body.username,
+            password: req.body.password,
             pfppath: pfp,
             signupdate: new Date(Date.now()).toISOString(),
             lastrefresh: new Date(Date.now()).toISOString(),
@@ -187,7 +187,7 @@ module.exports = {
             interested: Array[null],
             interestedReplies: Array[null],
             history: Array[null],
-            admin: req.query.admin
+            admin: false
         });
         console.log(Users);
         Users.save(function (err, Users) {

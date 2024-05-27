@@ -20,10 +20,10 @@ var UsersSchema = new Schema({
 		},
 		'update': Boolean
 	}],
-	'history':[{
-        searchQuery: String,
-        searchTime: Date
-    }],
+	'history': [{
+		searchQuery: String,
+		searchTime: Date
+	}],
 	'admin': Boolean
 });
 
@@ -61,4 +61,5 @@ UsersSchema.statics.authenticate = function (username, password, callback) {
 		});
 }
 
+var Users = mongoose.model('users', UsersSchema);
 module.exports = mongoose.model('Users', UsersSchema);
