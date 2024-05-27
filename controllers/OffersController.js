@@ -186,45 +186,61 @@ module.exports = {
                 )
             }
 
-            var userCoordinates = {
-                type: "Point",
-                coordinates: [0, 0],
-            };
-
-            if (res2.length != 0) {
-                console.log(res2)
-                userCoordinates = {
-                    type: "Point",
-                    coordinates: [res2[0].latitude, res2[0].longitude],
-                };
-            }
-
-
-            var Offers = new OffersModel({
-                name: req.body.name,
-                description: req.body.description,
-                price: req.body.price,
-                postDate: req.body.postDate,
-                scrapeDate: new Date(Date.now()).toISOString(),
-                linkToOriginal: req.body.linkToOriginal,
-                available: req.body.available,
-                pictures: req.body.pictures,
-                originSite: req.body.originSite,
-                location: req.body.location,
-                geodata: userCoordinates
-            });
-
-            Offers.save(function (err, Offers) {
+            OffersModel.findOne({ linkToOriginal: req.body.linkToOriginal }, function (err, res4) {
                 if (err) {
-                    console.log(err)
                     return res.status(500).json({
                         message: 'Error when creating Offers',
                         error: err
                     });
                 }
 
-                return res.status(201).json(Offers);
-            });
+                if (res4) {
+                    return res.status(302).json({
+                        message: 'Already Exists'
+                    });
+                }
+
+
+                var userCoordinates = {
+                    type: "Point",
+                    coordinates: [0, 0],
+                };
+
+                if (res2.length != 0) {
+                    console.log(res2)
+                    userCoordinates = {
+                        type: "Point",
+                        coordinates: [res2[0].latitude, res2[0].longitude],
+                    };
+                }
+
+
+                var Offers = new OffersModel({
+                    name: req.body.name,
+                    description: req.body.description,
+                    price: req.body.price,
+                    postDate: req.body.postDate,
+                    scrapeDate: new Date(Date.now()).toISOString(),
+                    linkToOriginal: req.body.linkToOriginal,
+                    available: req.body.available,
+                    pictures: req.body.pictures,
+                    originSite: req.body.originSite,
+                    location: req.body.location,
+                    geodata: userCoordinates
+                });
+
+                Offers.save(function (err, Offers) {
+                    if (err) {
+                        console.log(err)
+                        return res.status(500).json({
+                            message: 'Error when creating Offers',
+                            error: err
+                        });
+                    }
+
+                    return res.status(201).json(Offers);
+                });
+            })
         });
     },
 
