@@ -6,7 +6,7 @@ var LogsModel = require('../models/LogsModel.js');
 
 
 function APIKeyValidate(req, res, next) {
-    LogsModel.findOne().sort({ logDate: -1 }).exec(function (err, Logs) {
+    LogsModel.findOne({ APIKey: req.body.APIKey }).exec(function (err, Logs) {
         if (err) {
             return res.status(500).json({
                 message: 'Error when getting Logs.',
