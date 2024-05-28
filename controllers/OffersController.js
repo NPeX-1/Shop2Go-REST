@@ -246,18 +246,46 @@ module.exports = {
 
     timeToNextScrape: async function (req, res) {
         try {
-            const latestOffer = await OffersModel.findOne().sort({ scrapeDate: -1 }).exec();
+            const latestOffer = await OffersModel.findOne({ originSite: "AVTONET" }).sort({ scrapeDate: -1 }).exec();
             if (!latestOffer) {
                 return res.status(404).json({
                     message: 'No offers found.'
                 });
             }
 
-            const latestScrapeDate = new Date(latestOffer.scrapeDate);
-            const currentTime = new Date();
+            const latestScrapeDate = Math.floor(new Date(latestOffer.scrapeDate).getTime() / 1000);
+            const currentTime = Math.floor(new Date().getTime() / 1000);
             const timeDifference = currentTime - latestScrapeDate;
-            const tenMinutes = 10 * 60 * 1000;
-            const timeToNextScrape = tenMinutes - timeDifference;
+            const tenMinutes = 10 * 60;
+            const timeToNextScrape = timeDifference % tenMinutes;
+
+            return res.json({
+                timeToNextScrape: timeToNextScrape > 0 ? timeToNextScrape : 0
+            });
+
+        } catch (err) {
+            console.log(err)
+            return res.status(500).json({
+                message: 'Error when calculating time to next scrape.',
+                error: err
+            });
+        }
+    },
+
+    timeToNextScrapeBolha: async function (req, res) {
+        try {
+            const latestOffer = await OffersModel.findOne({ originSite: "BOLHA" }).sort({ scrapeDate: -1 }).exec();
+            if (!latestOffer) {
+                return res.status(404).json({
+                    message: 'No offers found.'
+                });
+            }
+
+            const latestScrapeDate = Math.floor(new Date(latestOffer.scrapeDate).getTime() / 1000);
+            const currentTime = Math.floor(new Date().getTime() / 1000);
+            const timeDifference = currentTime - latestScrapeDate;
+            const tenMinutes = 120 * 60;
+            const timeToNextScrape = timeDifference % tenMinutes;
 
             return res.json({
                 timeToNextScrape: timeToNextScrape > 0 ? timeToNextScrape : 0
