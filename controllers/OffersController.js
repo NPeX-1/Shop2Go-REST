@@ -11,7 +11,11 @@ const storage = multer.diskStorage({
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage: storage });
+
+const upload = multer({ 
+    storage: storage,
+    limits: { files: 10 }
+});
 
 const options = {
     provider: 'openstreetmap'
@@ -112,6 +116,7 @@ module.exports = {
     /**
      * OffersController.create()
      */
+    
     createManual: function (req, res) {
         geocoder.geocode(req.body.location, function (err, res2) {
             const userCoordinates = {
