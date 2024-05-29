@@ -54,7 +54,9 @@ router.get('/:id', OffersController.show);
 /*
  * POST
  */
-router.post('/', requiresLogin, upload.single('image'), OffersController.createManual);
+//router.post('/', requiresLogin, upload.single('image'), OffersController.createManual);
+router.post('/', requiresLogin, upload.array('images', 10), OffersController.createManual);
+
 router.post('/scrape', APIKeyValidate, OffersController.createAutomatic);
 
 /*
