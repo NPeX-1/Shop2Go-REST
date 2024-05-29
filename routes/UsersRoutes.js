@@ -4,7 +4,7 @@ var UsersController = require('../controllers/UsersController.js');
 var Recaptcha = require('express-recaptcha').RecaptchaV3
 var recaptcha = new Recaptcha('6LeOzNIpAAAAANvIOeeILUXdJHFdNxVTcwYBKdoE', '6LeOzNIpAAAAAO9XTv1zDXAexMHZSwTgnpw9y_mn')
 var multer = require('multer');
-var upload = multer({ dest: 'public/images/profilepics' });
+var upload = multer({ dest: 'public/images/profilepics/' });
 
 
 function requiresLogin(req, res, next) {
