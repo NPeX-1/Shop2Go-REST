@@ -1,4 +1,5 @@
 var OffersModel = require('../models/OffersModel.js');
+var UsersModel = require('../models/UsersModel.js');
 const NodeGeocoder = require('node-geocoder');
 const multer = require('multer');
 const path = require('path');
@@ -12,7 +13,7 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
     limits: { files: 10 }
 });
@@ -116,7 +117,7 @@ module.exports = {
     /**
      * OffersController.create()
      */
-    
+
     createManual: function (req, res) {
         geocoder.geocode(req.body.location, function (err, res2) {
             const userCoordinates = {
@@ -124,21 +125,28 @@ module.exports = {
                 coordinates: [res2[0].latitude, res2[0].longitude],
             };
 
-            var image = "";
-            req.file == undefined ? image = "" : "/images/" + req.file.filename;
+            var images = [];
+            if (req.files != undefined) {
+                for (var i = 0; i < req.files.length; i++) {
+                    images.push("/images/" + req.files[i].filename)
+                }
+            }
+            else {
+                images.push("")
+            }
             var Offers = new OffersModel({
                 name: req.body.name,
                 description: req.body.description,
                 price: req.body.price,
                 postDate: new Date(Date.now()).toISOString(),
-                available: req.body.available,
-                pictures: image,
-                originSite: req.body.originSite,
+                available: true,
+                pictures: images,
+                originSite: "INTERNAL",
                 location: req.body.location,
                 geodata: userCoordinates
             });
 
-            Offers.save(function (err, Offers) {
+            Offers.save(function (err, Offer) {
                 if (err) {
                     return res.status(500).json({
                         message: 'Error when creating Offers',
@@ -151,7 +159,7 @@ module.exports = {
                     UsersModel.findByIdAndUpdate(userId, {
                         $push: {
                             history: {
-                                offerId: offer._id,
+                                offerId: Offer._id,
                                 action: 'create',
                                 actionTime: new Date()
                             }
@@ -163,7 +171,7 @@ module.exports = {
                     });
                 }
 
-                return res.status(201).json(offer);
+                return res.status(201).json(Offer);
             });
         });
     },
