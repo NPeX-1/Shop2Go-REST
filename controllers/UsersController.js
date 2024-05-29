@@ -30,24 +30,26 @@ module.exports = {
      */
     show: function (req, res) {
         var id = req.params.id;
-
-        UsersModel.findOne({ _id: id }, function (err, Users) {
+    
+        UsersModel.findOne({ _id: id }, 'username pfppath', function (err, user) {
             if (err) {
                 return res.status(500).json({
-                    message: 'Error when getting Users.',
+                    message: 'Error when getting user information.',
                     error: err
                 });
             }
-
-            if (!Users) {
+    
+            if (!user) {
                 return res.status(404).json({
-                    message: 'No such Users'
+                    message: 'User not found.'
                 });
             }
-
-            return res.json(Users);
+    
+            return res.json(user);
         });
     },
+    
+    
 
     getPostsByUser: async function (req, res) {
         try {
@@ -363,7 +365,6 @@ module.exports = {
             return res.json(user);
         });
     },
-
 
     logout: function (req, res, next) {
         if (req.session) {
