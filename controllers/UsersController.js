@@ -49,6 +49,16 @@ module.exports = {
         });
     },
 
+    getPostsByUser: async function (req, res) {
+        try {
+            const userId = req.params.userId;
+            const posts = await OffersModel.find({ userId: userId });
+            res.json(posts);
+        } catch (err) {
+            res.status(500).json({ error: 'Failed to fetch posts' });
+        }
+    },
+
     wishlist: function (req, res) {
         var id = req.session.userId;
 
