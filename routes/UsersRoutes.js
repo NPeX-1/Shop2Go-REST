@@ -23,8 +23,9 @@ router.get('/bookmarks', UsersController.bookmarks);
 router.get('/wishlist', UsersController.wishlist);
 router.get('/logout', UsersController.logout);
 router.get('/history', requiresLogin, UsersController.getHistory);
+router.get('/posts/:id', UsersController.getPostsByUser);
 router.get('/:id', UsersController.show);
-router.get('/users/posts/:userId', requiresLogin, UsersController.getPostsByUser);
+
 
 
 router.post('/interested/', UsersController.addInterest);

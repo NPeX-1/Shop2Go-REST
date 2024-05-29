@@ -2,6 +2,7 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var bcrypt = require('bcrypt');
 
+
 var UsersSchema = new Schema({
 	'username': String,
 	'password': String,
@@ -22,8 +23,12 @@ var UsersSchema = new Schema({
 		'update': Boolean
 	}],
 	'history': [{
-		searchQuery: String,
-		searchTime: Date
+		'offerId': {
+			type: Schema.Types.ObjectId,
+			ref: 'Offers'
+		},
+		'action': String,
+		'actionTime': Date
 	}],
 	'admin': Boolean
 });

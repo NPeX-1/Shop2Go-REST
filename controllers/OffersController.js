@@ -140,6 +140,7 @@ module.exports = {
                 price: req.body.price,
                 postDate: new Date(Date.now()).toISOString(),
                 available: true,
+                postedBy: req.session.userId,
                 pictures: images,
                 originSite: "INTERNAL",
                 location: req.body.location,
@@ -156,15 +157,20 @@ module.exports = {
 
                 var userId = req.session.userId;
                 if (userId) {
-                    UsersModel.findByIdAndUpdate(userId, {
+                    var objHistory = {
+                        offerId: Offer._id,
+                        action: 'create',
+                        actionTime: new Date(Date.now()).toISOString(),
+                    };
+                    console.log(objHistory)
+
+                    UsersModel.findOneAndUpdate({ _id: userId }, {
                         $push: {
                             history: {
-                                offerId: Offer._id,
-                                action: 'create',
-                                actionTime: new Date()
+                                objHistory
                             }
                         }
-                    }, function (err, user) {
+                    }, function (err, history) {
                         if (err) {
                             console.error('Error when updating user history:', err);
                         }

@@ -10,6 +10,10 @@ var OffersSchema = new Schema({
 	'linkToOriginal': String,
 	'available': Boolean,
 	'pictures': [String],
+	'postedBy': {
+		type: Schema.Types.ObjectId,
+		ref: 'users'
+	},
 	'originSite': String,
 	'location': String,
 	'geodata': {

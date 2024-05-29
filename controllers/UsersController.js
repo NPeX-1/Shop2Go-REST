@@ -53,8 +53,8 @@ module.exports = {
 
     getPostsByUser: async function (req, res) {
         try {
-            const userId = req.params.userId;
-            const posts = await OffersModel.find({ userId: userId });
+            const userId = req.params.id;
+            const posts = await OffersModel.find({ postedBy: ObjectId(userId) });
             res.json(posts);
         } catch (err) {
             res.status(500).json({ error: 'Failed to fetch posts' });
@@ -207,7 +207,6 @@ module.exports = {
             history: Array[null],
             admin: false
         });
-        console.log(Users)
         Users.save(function (err, Users) {
             if (err) {
                 console.log(err);
