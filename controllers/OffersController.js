@@ -1,5 +1,8 @@
 var OffersModel = require('../models/OffersModel.js');
+var UsersModel = require('../models/UsersModel.js');
+var HistoryModel = require('../models/historyModel.js');
 const NodeGeocoder = require('node-geocoder');
+var ObjectId = require('mongoose').Types.ObjectId;
 const multer = require('multer');
 const path = require('path');
 
@@ -11,7 +14,11 @@ const storage = multer.diskStorage({
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
 });
-const upload = multer({ storage: storage });
+
+const upload = multer({
+    storage: storage,
+    limits: { files: 10 }
+});
 
 const options = {
     provider: 'openstreetmap'
@@ -65,14 +72,18 @@ module.exports = {
                 });
             }
 
+            var objHistory = new HistoryModel({
+                searchQuery: req.body.query,
+                action: 'search',
+                actionTime: new Date(Date.now()).toISOString(),
+            });
+            objHistory.save(function (err, HistoryEntry) {
+
             var userId = req.session.userId;
             if (userId) {
                 UsersModel.findByIdAndUpdate(userId, {
                     $push: {
-                        history: {
-                            searchQuery: req.body.query,
-                            searchTime: new Date()
-                        }
+                        history: ObjectId(HistoryEntry._id)
                     }
                 }, function (err, user) {
                     if (err) {
@@ -80,6 +91,7 @@ module.exports = {
                     }
                 });
             }
+        });
 
             return res.json(Offerss);
         });
@@ -112,6 +124,7 @@ module.exports = {
     /**
      * OffersController.create()
      */
+
     createManual: function (req, res) {
         geocoder.geocode(req.body.location, function (err, res2) {
             const userCoordinates = {
@@ -119,21 +132,29 @@ module.exports = {
                 coordinates: [res2[0].latitude, res2[0].longitude],
             };
 
-            var image = "";
-            req.file == undefined ? image = "" : "/images/" + req.file.filename;
+            var images = [];
+            if (req.files != undefined) {
+                for (var i = 0; i < req.files.length; i++) {
+                    images.push("/images/" + req.files[i].filename)
+                }
+            }
+            else {
+                images.push("")
+            }
             var Offers = new OffersModel({
                 name: req.body.name,
                 description: req.body.description,
                 price: req.body.price,
                 postDate: new Date(Date.now()).toISOString(),
-                available: req.body.available,
-                pictures: image,
-                originSite: req.body.originSite,
+                available: true,
+                postedBy: req.session.userId,
+                pictures: images,
+                originSite: "INTERNAL",
                 location: req.body.location,
                 geodata: userCoordinates
             });
 
-            Offers.save(function (err, Offers) {
+            Offers.save(function (err, Offer) {
                 if (err) {
                     return res.status(500).json({
                         message: 'Error when creating Offers',
@@ -143,22 +164,26 @@ module.exports = {
 
                 var userId = req.session.userId;
                 if (userId) {
-                    UsersModel.findByIdAndUpdate(userId, {
+                    var objHistory = new HistoryModel({
+                        offerId: ObjectId(Offer._id),
+                        action: 'create',
+                        actionTime: new Date(Date.now()).toISOString(),
+                    });
+                    objHistory.save(function (err, HistoryEntry) {
+
+                    UsersModel.findOneAndUpdate({ _id: userId }, {
                         $push: {
-                            history: {
-                                offerId: offer._id,
-                                action: 'create',
-                                actionTime: new Date()
-                            }
+                            history: ObjectId(HistoryEntry._id)
                         }
-                    }, function (err, user) {
+                    }, function (err, history) {
                         if (err) {
                             console.error('Error when updating user history:', err);
                         }
                     });
+                });
                 }
 
-                return res.status(201).json(offer);
+                return res.status(201).json(Offer);
             });
         });
     },
@@ -246,18 +271,46 @@ module.exports = {
 
     timeToNextScrape: async function (req, res) {
         try {
-            const latestOffer = await OffersModel.findOne().sort({ scrapeDate: -1 }).exec();
+            const latestOffer = await OffersModel.findOne({ originSite: "AVTONET" }).sort({ scrapeDate: -1 }).exec();
             if (!latestOffer) {
                 return res.status(404).json({
                     message: 'No offers found.'
                 });
             }
 
-            const latestScrapeDate = new Date(latestOffer.scrapeDate);
-            const currentTime = new Date();
+            const latestScrapeDate = Math.floor(new Date(latestOffer.scrapeDate).getTime() / 1000);
+            const currentTime = Math.floor(new Date().getTime() / 1000);
             const timeDifference = currentTime - latestScrapeDate;
-            const tenMinutes = 10 * 60 * 1000;
-            const timeToNextScrape = tenMinutes - timeDifference;
+            const tenMinutes = 10 * 60;
+            const timeToNextScrape = timeDifference % tenMinutes;
+
+            return res.json({
+                timeToNextScrape: timeToNextScrape > 0 ? timeToNextScrape : 0
+            });
+
+        } catch (err) {
+            console.log(err)
+            return res.status(500).json({
+                message: 'Error when calculating time to next scrape.',
+                error: err
+            });
+        }
+    },
+
+    timeToNextScrapeBolha: async function (req, res) {
+        try {
+            const latestOffer = await OffersModel.findOne({ originSite: "BOLHA" }).sort({ scrapeDate: -1 }).exec();
+            if (!latestOffer) {
+                return res.status(404).json({
+                    message: 'No offers found.'
+                });
+            }
+
+            const latestScrapeDate = Math.floor(new Date(latestOffer.scrapeDate).getTime() / 1000);
+            const currentTime = Math.floor(new Date().getTime() / 1000);
+            const timeDifference = currentTime - latestScrapeDate;
+            const tenMinutes = 120 * 60;
+            const timeToNextScrape = timeDifference % tenMinutes;
 
             return res.json({
                 timeToNextScrape: timeToNextScrape > 0 ? timeToNextScrape : 0

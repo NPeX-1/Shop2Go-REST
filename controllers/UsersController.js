@@ -30,23 +30,35 @@ module.exports = {
      */
     show: function (req, res) {
         var id = req.params.id;
-
-        UsersModel.findOne({ _id: id }, function (err, Users) {
+    
+        UsersModel.findOne({ _id: id }, 'username pfppath', function (err, user) {
             if (err) {
                 return res.status(500).json({
-                    message: 'Error when getting Users.',
+                    message: 'Error when getting user information.',
                     error: err
                 });
             }
-
-            if (!Users) {
+    
+            if (!user) {
                 return res.status(404).json({
-                    message: 'No such Users'
+                    message: 'User not found.'
                 });
             }
-
-            return res.json(Users);
+    
+            return res.json(user);
         });
+    },
+    
+    
+
+    getPostsByUser: async function (req, res) {
+        try {
+            const userId = req.params.id;
+            const posts = await OffersModel.find({ postedBy: ObjectId(userId) });
+            res.json(posts);
+        } catch (err) {
+            res.status(500).json({ error: 'Failed to fetch posts' });
+        }
     },
 
     wishlist: function (req, res) {
@@ -61,32 +73,35 @@ module.exports = {
             }
             var newPosts = [];
             for (var i = 0; i < Users.interested.length; i++) {
-                var words = Users.interested[i].split(" ");
-                while (words.length < 4) {
-                    words.push("");
+                var query = Users.interested[i].split(" ");
+                var regex = ".*";
+                for (var i = 0; i < query.length; i++) {
+                    regex += "(?=.*" + query[i] + "\\b).*"
                 }
-                OffersModel.find({
-                    "$and": [{ "title": { "$regex": words[0] } }, { "title": { "$regex": words[1] } },
-                    { "title": { "$regex": words[2] } }, { "title": { "$regex": words[3] } },
-                    { "postTime": { "$gt": Date(Date.now()).toISOString(), } }]
-                }, function (err, Offers) {
-                    if (err) {
-                        return res.status(500).json({
-                            message: 'Error when getting Wishlist.',
-                            error: err
-                        });
-                    }
+                regex += ".*";
+                console.log(regex);
+                OffersModel.find(
+                    {
+                        "name": { $regex: regex, $options: "i" },
+                        "postTime": { "$gt": Date(Date.now()).toISOString(), }
+                    }, function (err, Offers) {
+                        if (err) {
+                            return res.status(500).json({
+                                message: 'Error when getting Wishlist.',
+                                error: err
+                            });
+                        }
 
-                    for (offer in Offers) {
-                        var objInterest = {
-                            action: ObjectId(offer._id),
-                            update: false
-                        };
-                        newPosts.push(objInterest);
-                    }
+                        for (offer in Offers) {
+                            var objInterest = {
+                                action: ObjectId(offer._id),
+                                update: false
+                            };
+                            newPosts.push(objInterest);
+                        }
 
 
-                });
+                    });
             }
             if (!Users) {
                 return res.status(404).json({
@@ -176,20 +191,22 @@ module.exports = {
      */
     create: function (req, res) {
         var pfp = "";
-        req.file == undefined ? pfp = "" : "/images/profilepics/" + req.file.filename;
+        if (req.file != undefined) {
+            pfp = "/images/profilepics/" + req.file.filename;
+        }
         var Users = new UsersModel({
-            username: req.query.username,
-            password: req.query.password,
+            username: req.body.username,
+            password: req.body.password,
             pfppath: pfp,
+            email: req.body.email,
             signupdate: new Date(Date.now()).toISOString(),
             lastrefresh: new Date(Date.now()).toISOString(),
             bookmarks: Array[null],
             interested: Array[null],
             interestedReplies: Array[null],
             history: Array[null],
-            admin: req.query.admin
+            admin: false
         });
-        console.log(Users);
         Users.save(function (err, Users) {
             if (err) {
                 console.log(err);
@@ -273,6 +290,7 @@ module.exports = {
             Users.username = req.body.username ? req.body.username : Users.username;
             Users.password = req.body.password ? req.body.password : Users.password;
             Users.pfppath = req.body.pfppath ? req.body.pfppath : Users.pfppath;
+            Users.email = req.body.email ? req.body.email : Users.email;
             Users.signupdate = Users.signupdate;
             Users.lastrefresh = new Date(Date.now()).toISOString();
             Users.bookmarks = Users.bookmarks;
@@ -353,7 +371,6 @@ module.exports = {
             return res.json(user);
         });
     },
-
 
     logout: function (req, res, next) {
         if (req.session) {

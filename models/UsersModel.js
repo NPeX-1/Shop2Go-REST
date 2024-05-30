@@ -2,9 +2,11 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var bcrypt = require('bcrypt');
 
+
 var UsersSchema = new Schema({
 	'username': String,
 	'password': String,
+	'email': String,
 	'pfppath': String,
 	'signupdate': Date,
 	'lastrefresh': Date,
@@ -14,16 +16,13 @@ var UsersSchema = new Schema({
 	}],
 	'interested': [String],
 	'interestedReplies': [{
-		'action': {
-			type: Schema.Types.ObjectId,
-			ref: 'Offers'
-		},
-		'update': Boolean
+		type: Schema.Types.ObjectId,
+		ref: 'Notifications'
 	}],
-	'history':[{
-        searchQuery: String,
-        searchTime: Date
-    }],
+	'history': [{
+		type: Schema.Types.ObjectId,
+		ref: 'history'
+	}],
 	'admin': Boolean
 });
 
@@ -61,4 +60,5 @@ UsersSchema.statics.authenticate = function (username, password, callback) {
 		});
 }
 
+var Users = mongoose.model('users', UsersSchema);
 module.exports = mongoose.model('Users', UsersSchema);

@@ -13,7 +13,7 @@ module.exports = {
      */
     show: function (req, res) {
 
-        LogsModel.findOne().sort({ logDate: -1 }).exec(function (err, Logs) {
+        LogsModel.findOne().select({ log: 1 }).sort({ logDate: -1 }).exec(function (err, Logs) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Logs.',

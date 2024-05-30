@@ -45,15 +45,15 @@ function requiresLogin(req, res, next) {
 router.get('/', OffersController.list);
 router.get('/search', OffersController.search);
 router.get('/next-scrape-time', OffersController.timeToNextScrape);
+router.get('/next-scrape-time-bolha', OffersController.timeToNextScrapeBolha);
 /*
  * GET
  */
 router.get('/:id', OffersController.show);
 
-/*
- * POST
- */
-router.post('/', requiresLogin, upload.single('image'), OffersController.createManual);
+
+router.post('/', requiresLogin, upload.array('images'), OffersController.createManual);
+
 router.post('/scrape', APIKeyValidate, OffersController.createAutomatic);
 
 /*

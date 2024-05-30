@@ -21,7 +21,7 @@ router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
-router.get('/getcsrftoken', function (req, res, next) {
+router.get('/csrf', function (req, res, next) {
   const token = generateToken(req, true);
   //setToken(req, token);
   return res.status(200).json({ token: token });
