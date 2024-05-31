@@ -55,21 +55,41 @@ module.exports = {
     },
 
     search: function (req, res) {
-        var query = req.body.query.split(" ");
-        var regex = ".*";
-        for (var i = 0; i < query.length; i++) {
-            regex += "(?=.*" + query[i] + "\\b).*"
+        var radius = parseFloat(req.query.radius) * 0.000621371192
+        var latitude = parseFloat(req.query.latitude)
+        var longitude = parseFloat(req.query.longitude)
+        console.log(radius)
+        console.log(latitude)
+        console.log(longitude)
+        console.log(req.query)
+
+        if (req.query.query.includes(" ")) {
+            console.log("here")
+            var query = req.query.query.split(" ");
+            var regex = ".*";
+            for (var i = 0; i < query.length; i++) {
+                regex += "(?=.*" + query[i] + "\\b).*"
+            }
+            regex += ".*";
+        } else if (req.query.query == "") {
+            var regex = ".*"
         }
-        regex += ".*";
+        else {
+            console.log("here")
+            var query = req.query.query
+            var regex = ".*";
+            regex += "(?=.*" + query + "\\b).*"
+            regex += ".*";
+        }
         console.log(regex);
-        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[req.body.x, req.body.y], req.body.distance / 3963.2] } }, "name": { $regex: regex, $options: "i" } }, function (err, Offerss) {
+
+        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[latitude, longitude], radius / 3963.2] } }, "name": { $regex: regex, $options: "i" }, "originSite": req.query.store }, function (err, Offerss) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
                     error: err
                 });
             }
-
             var userId = req.session.userId;
             if (userId) {
                 UsersModel.findByIdAndUpdate(userId, {
