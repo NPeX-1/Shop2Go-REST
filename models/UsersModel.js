@@ -16,19 +16,12 @@ var UsersSchema = new Schema({
 	}],
 	'interested': [String],
 	'interestedReplies': [{
-		'action': {
-			type: Schema.Types.ObjectId,
-			ref: 'Offers'
-		},
-		'update': Boolean
+		type: Schema.Types.ObjectId,
+		ref: 'Notifications'
 	}],
 	'history': [{
-		'offerId': {
-			type: Schema.Types.ObjectId,
-			ref: 'Offers'
-		},
-		'action': String,
-		'actionTime': Date
+		type: Schema.Types.ObjectId,
+		ref: 'history'
 	}],
 	'admin': Boolean
 });

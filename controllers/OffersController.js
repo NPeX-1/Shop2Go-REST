@@ -1,6 +1,8 @@
 var OffersModel = require('../models/OffersModel.js');
 var UsersModel = require('../models/UsersModel.js');
+var HistoryModel = require('../models/historyModel.js');
 const NodeGeocoder = require('node-geocoder');
+var ObjectId = require('mongoose').Types.ObjectId;
 const multer = require('multer');
 const path = require('path');
 
@@ -90,14 +92,19 @@ module.exports = {
                     error: err
                 });
             }
+
+            var objHistory = new HistoryModel({
+                searchQuery: req.body.query,
+                action: 'search',
+                actionTime: new Date(Date.now()).toISOString(),
+            });
+            objHistory.save(function (err, HistoryEntry) {
+
             var userId = req.session.userId;
             if (userId) {
                 UsersModel.findByIdAndUpdate(userId, {
                     $push: {
-                        history: {
-                            searchQuery: req.body.query,
-                            searchTime: new Date()
-                        }
+                        history: ObjectId(HistoryEntry._id)
                     }
                 }, function (err, user) {
                     if (err) {
@@ -105,6 +112,7 @@ module.exports = {
                     }
                 });
             }
+        });
 
             return res.json(Offerss);
         });
@@ -177,24 +185,23 @@ module.exports = {
 
                 var userId = req.session.userId;
                 if (userId) {
-                    var objHistory = {
-                        offerId: Offer._id,
+                    var objHistory = new HistoryModel({
+                        offerId: ObjectId(Offer._id),
                         action: 'create',
                         actionTime: new Date(Date.now()).toISOString(),
-                    };
-                    console.log(objHistory)
+                    });
+                    objHistory.save(function (err, HistoryEntry) {
 
                     UsersModel.findOneAndUpdate({ _id: userId }, {
                         $push: {
-                            history: {
-                                objHistory
-                            }
+                            history: ObjectId(HistoryEntry._id)
                         }
                     }, function (err, history) {
                         if (err) {
                             console.error('Error when updating user history:', err);
                         }
                     });
+                });
                 }
 
                 return res.status(201).json(Offer);
