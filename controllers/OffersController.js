@@ -66,7 +66,6 @@ module.exports = {
         console.log(req.query)
 
         if (req.query.query.includes(" ")) {
-            console.log("here")
             var query = req.query.query.split(" ");
             var regex = ".*";
             for (var i = 0; i < query.length; i++) {
@@ -77,15 +76,13 @@ module.exports = {
             var regex = ".*"
         }
         else {
-            console.log("here")
             var query = req.query.query
             var regex = ".*";
             regex += "(?=.*" + query + "\\b).*"
             regex += ".*";
         }
-        console.log(regex);
 
-        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[latitude, longitude], radius / 3963.2] } }, "name": { $regex: regex, $options: "i" }, "originSite": req.query.store }, function (err, Offerss) {
+        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[latitude, longitude], radius / 3963.2] } }, "name": { $regex: regex, $options: "i" }, "originSite": req.query.store, "validated": true }, function (err, Offerss) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
@@ -100,19 +97,19 @@ module.exports = {
             });
             objHistory.save(function (err, HistoryEntry) {
 
-            var userId = req.session.userId;
-            if (userId) {
-                UsersModel.findByIdAndUpdate(userId, {
-                    $push: {
-                        history: ObjectId(HistoryEntry._id)
-                    }
-                }, function (err, user) {
-                    if (err) {
-                        console.error('Error when updating user history:', err);
-                    }
-                });
-            }
-        });
+                var userId = req.session.userId;
+                if (userId) {
+                    UsersModel.findByIdAndUpdate(userId, {
+                        $push: {
+                            history: ObjectId(HistoryEntry._id)
+                        }
+                    }, function (err, user) {
+                        if (err) {
+                            console.error('Error when updating user history:', err);
+                        }
+                    });
+                }
+            });
 
             return res.json(Offerss);
         });
@@ -172,7 +169,8 @@ module.exports = {
                 pictures: images,
                 originSite: "INTERNAL",
                 location: req.body.location,
-                geodata: userCoordinates
+                geodata: userCoordinates,
+                validated: true
             });
 
             Offers.save(function (err, Offer) {
@@ -192,16 +190,16 @@ module.exports = {
                     });
                     objHistory.save(function (err, HistoryEntry) {
 
-                    UsersModel.findOneAndUpdate({ _id: userId }, {
-                        $push: {
-                            history: ObjectId(HistoryEntry._id)
-                        }
-                    }, function (err, history) {
-                        if (err) {
-                            console.error('Error when updating user history:', err);
-                        }
+                        UsersModel.findOneAndUpdate({ _id: userId }, {
+                            $push: {
+                                history: ObjectId(HistoryEntry._id)
+                            }
+                        }, function (err, history) {
+                            if (err) {
+                                console.error('Error when updating user history:', err);
+                            }
+                        });
                     });
-                });
                 }
 
                 return res.status(201).json(Offer);
@@ -272,7 +270,8 @@ module.exports = {
                     pictures: req.body.pictures,
                     originSite: req.body.originSite,
                     location: req.body.location,
-                    geodata: userCoordinates
+                    geodata: userCoordinates,
+                    validated: (res2.length == 0) ? false : true
                 });
 
                 Offers.save(function (err, Offers) {
