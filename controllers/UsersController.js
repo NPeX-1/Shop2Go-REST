@@ -30,7 +30,7 @@ module.exports = {
      */
     show: function (req, res) {
         var id = req.params.id;
-    
+
         UsersModel.findOne({ _id: id }, 'username pfppath', function (err, user) {
             if (err) {
                 return res.status(500).json({
@@ -38,18 +38,18 @@ module.exports = {
                     error: err
                 });
             }
-    
+
             if (!user) {
                 return res.status(404).json({
                     message: 'User not found.'
                 });
             }
-    
+
             return res.json(user);
         });
     },
-    
-    
+
+
 
     getPostsByUser: async function (req, res) {
         try {
@@ -249,7 +249,7 @@ module.exports = {
             });
         }
 
-        UsersModel.findById(userId, function (err, user) {
+        UsersModel.findById(userId).populate("history").exec(function (err, user) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting user history.',
@@ -264,6 +264,33 @@ module.exports = {
             }
 
             return res.json(user.history);
+        });
+    },
+
+    notifications: function (req, res) {
+        var userId = req.session.userId;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: 'You need to be logged in to view the history.'
+            });
+        }
+
+        UsersModel.find({ "_id": userId }).populate("interestedReplies").exec(function (err, user) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when getting user history.',
+                    error: err
+                });
+            }
+
+            if (!user) {
+                return res.status(404).json({
+                    message: 'User not found.'
+                });
+            }
+
+            return res.json(user.interestedReplies);
         });
     },
 

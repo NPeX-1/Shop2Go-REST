@@ -22,6 +22,7 @@ router.get('/', UsersController.list);
 router.get('/bookmarks', UsersController.bookmarks);
 router.get('/wishlist', UsersController.wishlist);
 router.get('/logout', UsersController.logout);
+router.get('/notifications', UsersController.notifications);
 router.get('/history', requiresLogin, UsersController.getHistory);
 router.get('/posts/:id', UsersController.getPostsByUser);
 router.get('/:id', UsersController.show);
