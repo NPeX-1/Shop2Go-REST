@@ -406,5 +406,18 @@ module.exports = {
 
             return res.status(204).json();
         });
+    },
+
+    toValidate: function(req,res){
+        OffersModel.find({validated: false}, function(err, Offers) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when finding offers to validate.',
+                    error: err
+                });
+            }
+
+            return res.json(Offers);
+        });
     }
 };

@@ -27,8 +27,6 @@ router.get('/history', requiresLogin, UsersController.getHistory);
 router.get('/posts/:id', UsersController.getPostsByUser);
 router.get('/:id', UsersController.show);
 
-
-
 router.post('/interested/', UsersController.addInterest);
 
 router.post('/', recaptcha.middleware.verify, upload.single('image'), UsersController.create);
