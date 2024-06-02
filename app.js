@@ -17,7 +17,7 @@ const {
 var { expressjwt: jwt } = require("express-jwt");
 
 var mongoose = require('mongoose');
-//var mongoDB = "mongodb://mongo:27017/shop2go"
+var mongoDB = "mongodb://mongo:27017/shop2go"
 var mongoDB = "mongodb://localhost:27017/shop2go"
 mongoose.connect(mongoDB);
 mongoose.Promise = global.Promise;

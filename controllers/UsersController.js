@@ -48,8 +48,6 @@ module.exports = {
             return res.json(user);
         });
     },
-    
-    
 
     getPostsByUser: async function (req, res) {
         try {
@@ -103,6 +101,7 @@ module.exports = {
 
                     });
             }
+        
             if (!Users) {
                 return res.status(404).json({
                     message: 'No such Wishlist Items Yet'
@@ -127,7 +126,6 @@ module.exports = {
             });
         });
     },
-
 
     bookmarks: function (req, res) {
         var id = req.session.userId;
