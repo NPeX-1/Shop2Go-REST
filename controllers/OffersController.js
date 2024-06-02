@@ -82,7 +82,7 @@ module.exports = {
             regex += ".*";
         }
 
-        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[latitude, longitude], radius / 3963.2] } }, "name": { $regex: regex, $options: "i" }, "originSite": req.query.store, "validated": true }, function (err, Offerss) {
+        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[latitude, longitude], radius / 3963.2] } }, "name": { $regex: regex, $options: "i" }, "originSite": req.query.store, "validated": true }).populate("postedBy").exec(function (err, Offerss) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
@@ -121,7 +121,7 @@ module.exports = {
     show: function (req, res) {
         var id = req.params.id;
 
-        OffersModel.findOne({ _id: id }, function (err, Offers) {
+        OffersModel.findOne({ _id: id }).populate("postedBy").exec(function (err, Offers) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
