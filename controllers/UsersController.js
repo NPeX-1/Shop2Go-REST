@@ -99,13 +99,18 @@ module.exports = {
                 }
                 OffersModel.find(
                     { "postDate": { "$gt": new Date(lastrefresh) }, "name": { "$regex": regex, "$options": "i" } }, function (err, Offers) {
-                        console.log(Offers)
                         if (err) {
                             return res.status(500).json({
                                 message: 'Error when getting Wishlist.',
                                 error: err
                             });
                         }
+
+                        if (Offers.length < 1) {
+
+                            return res.json(Users);
+                        }
+
                         for (var k = 0; k < Offers.length; k++) {
                             var objInterest = new NotificationsModel({
                                 'action': Offers[k]._id,
@@ -144,7 +149,6 @@ module.exports = {
 
     bookmarks: function (req, res) {
         var id = req.session.userId;
-
         UsersModel.findOne({ _id: id }, function (err, Users) {
             if (err) {
                 return res.status(500).json({
@@ -158,16 +162,23 @@ module.exports = {
                     message: 'No such Bookmarked Items Yet'
                 });
             }
+            console.log(Users.bookmarks)
+
 
             OffersModel.find({
                 available: false,
                 _id: { $in: Users.bookmarks },
-            }), function (err, Offers) {
+            }, function (err, Offers) {
                 if (err) {
                     return res.status(500).json({
                         message: 'Error when getting Bookamrks.',
                         error: err
                     });
+                }
+
+                if (Offers.length < 1) {
+
+                    return res.json(Users);
                 }
 
                 for (var k = 0; k < Offers.length; k++) {
@@ -197,7 +208,7 @@ module.exports = {
                     });
 
                 }
-            };
+            });
         })
     },
 
@@ -318,7 +329,7 @@ module.exports = {
             });
         }
 
-        UsersModel.findOne({ "_id": userId }).populate({ path: 'interestedReplies', populate: { path: 'action', model: 'Offers' } }).exec(function (err, user) {
+        UsersModel.findOne({ "_id": userId }).populate({ path: 'interestedReplies', match: { seen: false }, populate: { path: 'action', model: 'Offers' } }).exec(function (err, user) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting user history.',
@@ -331,7 +342,6 @@ module.exports = {
                     message: 'User not found.'
                 });
             }
-
             return res.json(user);
         });
     },

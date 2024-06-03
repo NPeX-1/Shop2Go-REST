@@ -15,13 +15,6 @@ wss.on('connection', (ws) => {
     // Handle incoming messages
     ws.on('message', (message) => {
         console.log(`Received message: ${message}`);
-
-        // Broadcast the message to all connected clients
-        wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
     });
 
     // Handle client disconnection
@@ -442,24 +435,52 @@ module.exports = {
         });
     },
 
-    unlist: function (req, res) {
-        var id = req.params.id;
 
-        OffersModel.findByIdAndUpdate(id, { $set: { available: true } }, { new: true }, function (err, Offers) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when deleting the Offers.',
-                    error: err
+    unlist: function (req, res) {
+        var id = req.params.id
+        OffersModel.findOne({
+            _id: id
+        }).exec(function (err, Bookmark) {
+            if (!Bookmark)
+            {
+                return res.status(500)
+                }
+
+            if (Bookmark.available) {
+                OffersModel.findByIdAndUpdate(id, { $set: { available: false } }, { new: true }, function (err, Offers) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when deleting the Offers.',
+                            error: err
+                        });
+                    }
+
+
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send("Unlisted");
+                        }
+                    });
+                    return res.status(204).json();
+                });
+            } else {
+                OffersModel.findByIdAndUpdate(id, { $set: { available: true } }, { new: true }, function (err, Offers) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when deleting the Offers.',
+                            error: err
+                        });
+                    }
+
+
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send("NewPost");
+                        }
+                    });
+                    return res.status(204).json();
                 });
             }
-
-
-            wss.clients.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send("Unlisted");
-                }
-            });
-            return res.status(204).json();
         });
     },
 
