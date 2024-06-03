@@ -6,6 +6,23 @@ var ObjectId = require('mongoose').Types.ObjectId;
 const multer = require('multer');
 const path = require('path');
 
+const WebSocket = require('ws');
+
+const wss = new WebSocket.Server({ port: 8000 });
+wss.on('connection', (ws) => {
+    console.log('A new client connected');
+
+    // Handle incoming messages
+    ws.on('message', (message) => {
+        console.log(`Received message: ${message}`);
+    });
+
+    // Handle client disconnection
+    ws.on('close', () => {
+        console.log('Client disconnected');
+    });
+});
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'public/images/');
@@ -202,6 +219,11 @@ module.exports = {
                     });
                 }
 
+                wss.clients.forEach((client) => {
+                    if (client.readyState === WebSocket.OPEN) {
+                        client.send("NewPost");
+                    }
+                });
                 return res.status(201).json(Offer);
             });
         });
@@ -283,6 +305,11 @@ module.exports = {
                         });
                     }
 
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send("NewPost");
+                        }
+                    });
                     return res.status(201).json(Offers);
                 });
             })
@@ -408,8 +435,57 @@ module.exports = {
         });
     },
 
-    toValidate: function(req,res){
-        OffersModel.find({validated: false}, function(err, Offers) {
+
+    unlist: function (req, res) {
+        var id = req.params.id
+        OffersModel.findOne({
+            _id: id
+        }).exec(function (err, Bookmark) {
+            if (!Bookmark)
+            {
+                return res.status(500)
+                }
+
+            if (Bookmark.available) {
+                OffersModel.findByIdAndUpdate(id, { $set: { available: false } }, { new: true }, function (err, Offers) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when deleting the Offers.',
+                            error: err
+                        });
+                    }
+
+
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send("Unlisted");
+                        }
+                    });
+                    return res.status(204).json();
+                });
+            } else {
+                OffersModel.findByIdAndUpdate(id, { $set: { available: true } }, { new: true }, function (err, Offers) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when deleting the Offers.',
+                            error: err
+                        });
+                    }
+
+
+                    wss.clients.forEach((client) => {
+                        if (client.readyState === WebSocket.OPEN) {
+                            client.send("NewPost");
+                        }
+                    });
+                    return res.status(204).json();
+                });
+            }
+        });
+    },
+
+    toValidate: function (req, res) {
+        OffersModel.find({ validated: false }, function (err, Offers) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when finding offers to validate.',

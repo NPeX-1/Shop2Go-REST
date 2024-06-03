@@ -29,6 +29,7 @@ var usersRouter = require('./routes/UsersRoutes');
 var offersRouter = require('./routes/OffersRoutes');
 var logsRouter = require('./routes/LogsRoutes');
 var contactRouter = require('./routes/ContactRoutes');
+var notificationsRouter = require('./routes/NotificationsRoutes');
 
 var app = express();
 
@@ -85,6 +86,7 @@ app.use('/users', csrfSynchronisedProtection, usersRouter);
 app.use('/offers', offersRouter);
 app.use('/log', logsRouter);
 app.use('/contact', contactRouter);
+app.use('/notifications', notificationsRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
