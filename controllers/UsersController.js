@@ -1,7 +1,7 @@
 var UsersModel = require('../models/UsersModel.js');
-var OffersModel = require('../models/OffersModel.js')
+var OffersModel = require('../models/OffersModel.js');
+const NotificationsModel = require('../models/NotificationsModel.js');
 var ObjectId = require('mongoose').Types.ObjectId;
-
 /**
  * UsersController.js
  *
@@ -31,7 +31,8 @@ module.exports = {
     show: function (req, res) {
         var id = req.params.id;
 
-        UsersModel.findOne({ _id: id }, 'username pfppath', function (err, user) {
+        UsersModel.findOne({ _id: id }).populate("interestedReplies").populate("interested").populate("history").populate("bookmarks").exec(function (err, user) {
+            console.log(err)
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting user information.',
@@ -63,7 +64,7 @@ module.exports = {
 
     wishlist: function (req, res) {
         var id = req.session.userId;
-
+        var lastrefresh = "";
         UsersModel.findOne({ _id: id }, function (err, Users) {
             if (err) {
                 return res.status(500).json({
@@ -71,61 +72,73 @@ module.exports = {
                     error: err
                 });
             }
-            var newPosts = [];
+
+            if (!Users) {
+                return res.status(404).json({
+                    message: 'No such Wishlist Items Yet'
+                });
+            }
+            lastrefresh = Users.lastrefresh;
+
             for (var i = 0; i < Users.interested.length; i++) {
-                var query = Users.interested[i].split(" ");
-                var regex = ".*";
-                for (var i = 0; i < query.length; i++) {
-                    regex += "(?=.*" + query[i] + "\\b).*"
+                if (Users.interested[i].includes(" ")) {
+                    var query = Users.interested[i].split(" ");
+                    var regex = ".*";
+                    for (var j = 0; j < query.length; j++) {
+                        regex += "(?=.*" + query[j] + ").*"
+                    }
+                    regex += ".*";
+                } else if (Users.interested[i] == "") {
+                    var regex = ".*"
                 }
-                regex += ".*";
-                console.log(regex);
+                else {
+                    var query = Users.interested[i]
+                    var regex = ".*";
+                    regex += "(?=.*" + query + ").*"
+                    regex += ".*";
+                }
                 OffersModel.find(
-                    {
-                        "name": { $regex: regex, $options: "i" },
-                        "postTime": { "$gt": Date(Date.now()).toISOString(), }
-                    }, function (err, Offers) {
+                    { "postDate": { "$gt": new Date(lastrefresh) }, "name": { "$regex": regex, "$options": "i" } }, function (err, Offers) {
+                        console.log(Offers)
                         if (err) {
                             return res.status(500).json({
                                 message: 'Error when getting Wishlist.',
                                 error: err
                             });
                         }
+                        for (var k = 0; k < Offers.length; k++) {
+                            var objInterest = new NotificationsModel({
+                                'action': Offers[k]._id,
+                                'update': false,
+                                'seen': false
+                            });
+                            objInterest.save(function (err, NotificationEntry) {
+                                UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: NotificationEntry._id }, lastrefresh: Date(Date.now()) }, { new: true }).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
+                                    if (err) {
 
-                        for (offer in Offers) {
-                            var objInterest = {
-                                action: ObjectId(offer._id),
-                                update: false
-                            };
-                            newPosts.push(objInterest);
+                                        return res.status(500).json({
+                                            message: 'Error when getting Users.',
+                                            error: err
+                                        });
+                                    }
+
+                                    if (!Users2) {
+                                        return res.status(404).json({
+                                            message: 'No such Users'
+                                        });
+                                    }
+
+                                    return res.json(Users2);
+                                });
+                            });
+
+
                         }
-
-
                     });
             }
-        
-            if (!Users) {
-                return res.status(404).json({
-                    message: 'No such Wishlist Items Yet'
-                });
-            }
 
-            UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: { $each: newPosts } }, lastrefresh: Date(Date.now()).toISOString() }, { new: true }).populate("interestedReplies.action").populate("bookmarks.bookmark").exec(function (err, Users2) {
-                if (err) {
-                    return res.status(500).json({
-                        message: 'Error when getting Users.',
-                        error: err
-                    });
-                }
 
-                if (!Users2) {
-                    return res.status(404).json({
-                        message: 'No such Users'
-                    });
-                }
-
-                return res.json(Users2);
-            });
+            return res.status(200);
         });
     },
 
@@ -139,10 +152,17 @@ module.exports = {
                     error: err
                 });
             }
+
+            if (!Users) {
+                return res.status(404).json({
+                    message: 'No such Bookmarked Items Yet'
+                });
+            }
+
             OffersModel.find({
-                "$and": [{ "available": false },
-                { "postTime": { "$gt": Date(Date.now()).toISOString(), } }]
-            }, function (err, Offers) {
+                available: false,
+                _id: { $in: Users.bookmarks },
+            }), function (err, Offers) {
                 if (err) {
                     return res.status(500).json({
                         message: 'Error when getting Bookamrks.',
@@ -150,39 +170,35 @@ module.exports = {
                     });
                 }
 
-                for (offer in Offers) {
-                    var objInterest = {
-                        action: ObjectId(offer._id),
-                        update: true
-                    };
-                    newPosts.push(objInterest);
-                }
-
-
-            });
-            if (!Users) {
-                return res.status(404).json({
-                    message: 'No such Bookmarked Items Yet'
-                });
-            }
-
-            UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: { $each: newPosts } } }, { new: true }).populate("interestedReplies.action").populate("bookmarks.bookmark").exec(function (err, Users2) {
-                if (err) {
-                    return res.status(500).json({
-                        message: 'Error when getting Users.',
-                        error: err
+                for (var k = 0; k < Offers.length; k++) {
+                    var objInterest = new NotificationsModel({
+                        'action': Offers[k]._id,
+                        'update': true,
+                        'seen': false
                     });
-                }
+                    objInterest.save(function (err, NotificationEntry) {
+                        UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: NotificationEntry._id }, lastrefresh: Date(Date.now()) }, { new: true }).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
+                            if (err) {
 
-                if (!Users2) {
-                    return res.status(404).json({
-                        message: 'No such Users'
+                                return res.status(500).json({
+                                    message: 'Error when getting Users.',
+                                    error: err
+                                });
+                            }
+
+                            if (!Users2) {
+                                return res.status(404).json({
+                                    message: 'No such Users'
+                                });
+                            }
+
+                            return res.json(Users2);
+                        });
                     });
-                }
 
-                return res.json(Users2);
-            });
-        });
+                }
+            };
+        })
     },
 
 
@@ -222,21 +238,47 @@ module.exports = {
 
     createBookmark: function (req, res) {
         var id = req.params.id
-        UsersModel.findOneAndUpdate({ _id: req.session.userId }, { $push: { bookmarks: ObjectId(id) } }, { new: true }).populate("interestedReplies.action").populate("bookmarks").exec(function (err, Users) {
-            if (err) {
-                return res.status(500).json({
-                    message: 'Error when getting Users.',
-                    error: err
+        UsersModel.findOne({
+            _id: req.session.userId,
+            bookmarks: id
+        }).exec(function (err, Bookmark) {
+            if (!Bookmark) {
+                UsersModel.findOneAndUpdate({ _id: req.session.userId }, { $push: { bookmarks: ObjectId(id) } }, { new: true }).exec(function (err, Users) {
+                    console.log(err)
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when getting Users.',
+                            error: err
+                        });
+                    }
+
+                    if (!Users) {
+                        return res.status(404).json({
+                            message: 'No such Users'
+                        });
+                    }
+
+                    return res.json(Users);
+                });
+            } else {
+                UsersModel.findOneAndUpdate({ _id: req.session.userId }, { $pull: { bookmarks: ObjectId(id) } }, { new: true }).exec(function (err, Users) {
+                    console.log(err)
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when getting Users.',
+                            error: err
+                        });
+                    }
+
+                    if (!Users) {
+                        return res.status(404).json({
+                            message: 'No such Users'
+                        });
+                    }
+
+                    return res.json(Users);
                 });
             }
-
-            if (!Users) {
-                return res.status(404).json({
-                    message: 'No such Users'
-                });
-            }
-
-            return res.json(Users);
         });
     },
 
@@ -276,7 +318,7 @@ module.exports = {
             });
         }
 
-        UsersModel.find({ "_id": userId }).populate("interestedReplies").exec(function (err, user) {
+        UsersModel.findOne({ "_id": userId }).populate({ path: 'interestedReplies', populate: { path: 'action', model: 'Offers' } }).exec(function (err, user) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting user history.',
@@ -290,7 +332,7 @@ module.exports = {
                 });
             }
 
-            return res.json(user.interestedReplies);
+            return res.json(user);
         });
     },
 
@@ -359,8 +401,8 @@ module.exports = {
 
 
     addInterest: function (req, res) {
-        var id = req.query.id;
-        var interest = req.query.interest;
+        var id = req.session.userId;
+        var interest = req.body.interest;
         UsersModel.updateOne({ _id: id }, { $push: { interested: interest } }, function (err, result) {
             if (err) {
                 console.log(err);
@@ -372,9 +414,9 @@ module.exports = {
     },
 
     removeWishlistItem: function (req, res) {
-        var id = req.params.id;
+        var id = req.session.userId;
 
-        UsersModel.findOneAndUpdate({ _id: id }, { $pull: { interested: req.body.toRemove } }, { new: true }, function (err, Users) {
+        UsersModel.findOneAndUpdate({ _id: id }, { $pull: { interested: req.params.toRemove } }, { new: true }, function (err, Users) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when deleting the Users.',

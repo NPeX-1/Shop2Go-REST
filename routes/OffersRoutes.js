@@ -60,6 +60,7 @@ router.post('/scrape', APIKeyValidate, OffersController.createAutomatic);
 /*
  * PUT
  */
+router.put('/unlist/:id', OffersController.unlist);
 router.put('/:id', OffersController.update);
 
 /*
