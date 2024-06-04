@@ -54,12 +54,13 @@ router.get('/:id', OffersController.show);
 
 
 router.post('/', requiresLogin, upload.array('images'), OffersController.createManual);
-
+router.post('/validate', OffersController.tryValidate);
 router.post('/scrape', APIKeyValidate, OffersController.createAutomatic);
 
 /*
  * PUT
  */
+router.put('/validate/:id', OffersController.validate);
 router.put('/unlist/:id', OffersController.unlist);
 router.put('/:id', OffersController.update);
 

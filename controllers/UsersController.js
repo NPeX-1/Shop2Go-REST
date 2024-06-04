@@ -160,6 +160,7 @@ module.exports = {
                     });
                 }
 
+                console.log(Offers.length)
                 if (Offers.length > 0) {
                     for (var k = 0; k < Offers.length; k++) {
                         var objInterest = new NotificationsModel({
@@ -179,8 +180,11 @@ module.exports = {
                             });
                         });
                     }
+                    return res.status(200)
                 }
-                return res.status(200)
+                else {
+                    return res.status(500)
+                }
             });
         })
     },

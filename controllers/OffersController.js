@@ -481,5 +481,40 @@ module.exports = {
 
             return res.json(Offers);
         });
-    }
+    },
+
+    validate: function (req, res) {
+        const userCoordinates = {
+            type: "Point",
+            coordinates: [req.body.lat, req.body.lon],
+        };
+        OffersModel.findOneAndUpdate(
+            { _id: req.params.id },
+            { $set: { validated: true, geodata: userCoordinates, location: req.body.location } },
+            { new: true },
+            function (err, updatedOffer) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when finding and updating offer.',
+                        error: err
+                    });
+                }
+                if (!updatedOffer) {
+                    return res.status(404).json({
+                        message: 'Offer not found or already validated.'
+                    });
+                }
+                return res.json(updatedOffer);
+            }
+        );
+    },
+
+    tryValidate: function (req, res) {
+        geocoder.geocode(req.body.location, function (err, Geocoded) {
+            if (err) {
+                return res.status(500).message(err);
+            }
+            return res.json(Geocoded);
+        });
+    },
 };
