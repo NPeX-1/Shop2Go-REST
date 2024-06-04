@@ -35,7 +35,7 @@ var app = express();
 
 
 var cors = require('cors');
-var allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://172.211.46.40:81'];
+var allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://172.211.46.40:81', 'http://shop.npustudios.eu'];
 app.use(cors({
   credentials: true,
   origin: function (origin, callback) {
