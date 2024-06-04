@@ -46,6 +46,7 @@ router.get('/', OffersController.list);
 router.get('/search', OffersController.search);
 router.get('/next-scrape-time', OffersController.timeToNextScrape);
 router.get('/next-scrape-time-bolha', OffersController.timeToNextScrapeBolha);
+router.get('/tovalidate', OffersController.toValidate);
 /*
  * GET
  */
@@ -59,6 +60,7 @@ router.post('/scrape', APIKeyValidate, OffersController.createAutomatic);
 /*
  * PUT
  */
+router.put('/unlist/:id', OffersController.unlist);
 router.put('/:id', OffersController.update);
 
 /*

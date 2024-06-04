@@ -22,21 +22,20 @@ router.get('/', UsersController.list);
 router.get('/bookmarks', UsersController.bookmarks);
 router.get('/wishlist', UsersController.wishlist);
 router.get('/logout', UsersController.logout);
+router.get('/notifications', UsersController.notifications);
 router.get('/history', requiresLogin, UsersController.getHistory);
 router.get('/posts/:id', UsersController.getPostsByUser);
 router.get('/:id', UsersController.show);
 
-
-
-router.post('/interested/', UsersController.addInterest);
+router.post('/addInterest', UsersController.addInterest);
 
 router.post('/', recaptcha.middleware.verify, upload.single('image'), UsersController.create);
-router.post('/bookmarks/:id', recaptcha.middleware.verify, UsersController.createBookmark);
+router.post('/bookmarks/:id', UsersController.createBookmark);
 router.post('/login', UsersController.login);
 
 router.put('/:id', UsersController.update);
 
-router.delete('/wishlist', UsersController.removeWishlistItem);
+router.delete('/wishlist/:toRemove', UsersController.removeWishlistItem);
 router.delete('/:id', UsersController.remove);
 
 module.exports = router;

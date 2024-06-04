@@ -29,7 +29,7 @@ module.exports = {
     show: function (req, res) {
         var id = req.params.id;
 
-        NotificationsModel.findOne({_id: id}, function (err, Notifications) {
+        NotificationsModel.findOne({ _id: id }, function (err, Notifications) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Notifications.',
@@ -52,9 +52,9 @@ module.exports = {
      */
     create: function (req, res) {
         var Notifications = new NotificationsModel({
-			action : req.body.action,
-			update : req.body.update,
-			seen : req.body.seen
+            action: req.body.action,
+            update: req.body.update,
+            seen: req.body.seen
         });
 
         Notifications.save(function (err, Notifications) {
@@ -75,7 +75,7 @@ module.exports = {
     update: function (req, res) {
         var id = req.params.id;
 
-        NotificationsModel.findOne({_id: id}, function (err, Notifications) {
+        NotificationsModel.findOne({ _id: id }, function (err, Notifications) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Notifications',
@@ -90,9 +90,9 @@ module.exports = {
             }
 
             Notifications.action = req.body.action ? req.body.action : Notifications.action;
-			Notifications.update = req.body.update ? req.body.update : Notifications.update;
-			Notifications.seen = req.body.seen ? req.body.seen : Notifications.seen;
-			
+            Notifications.update = req.body.update ? req.body.update : Notifications.update;
+            Notifications.seen = req.body.seen ? req.body.seen : Notifications.seen;
+
             Notifications.save(function (err, Notifications) {
                 if (err) {
                     return res.status(500).json({
@@ -121,6 +121,20 @@ module.exports = {
             }
 
             return res.status(204).json();
+        });
+    },
+
+    seen: function (req, res) {
+        var id = req.params.id;
+
+        NotificationsModel.findByIdAndUpdate(id, { $set: { seen: true } }, { new: true }, function (err, Notifications) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when deleting the Notifications.',
+                    error: err
+                });
+            }
+            return res.status(204).json(Notifications);
         });
     }
 };

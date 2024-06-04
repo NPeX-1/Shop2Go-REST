@@ -6,6 +6,35 @@ var ObjectId = require('mongoose').Types.ObjectId;
 const multer = require('multer');
 const path = require('path');
 
+const WebSocket = require('ws');
+
+const wss = new WebSocket.Server({ port: 8000 });
+wss.on('connection', (ws) => {
+    console.log('A new client connected');
+
+    // Handle incoming messages
+    ws.on('message', (message) => {
+        console.log(`Received message: ${message}`);
+    });
+
+    // Handle client disconnection
+    ws.on('close', () => {
+        console.log('Client disconnected');
+    });
+});
+
+const minutes = 10;
+const interval = minutes * 60 * 1000;
+
+setInterval(() => {
+    console.log("Refreshing");
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send("NewPost");
+        }
+    });
+}, interval);
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'public/images/');
@@ -57,14 +86,32 @@ module.exports = {
     },
 
     search: function (req, res) {
-        var query = req.body.query.split(" ");
-        var regex = ".*";
-        for (var i = 0; i < query.length; i++) {
-            regex += "(?=.*" + query[i] + "\\b).*"
+        var radius = parseFloat(req.query.radius) * 0.000621371192
+        var latitude = parseFloat(req.query.latitude)
+        var longitude = parseFloat(req.query.longitude)
+        console.log(radius)
+        console.log(latitude)
+        console.log(longitude)
+        console.log(req.query)
+
+        if (req.query.query.includes(" ")) {
+            var query = req.query.query.split(" ");
+            var regex = ".*";
+            for (var i = 0; i < query.length; i++) {
+                regex += "(?=.*" + query[i] + "\\b).*"
+            }
+            regex += ".*";
+        } else if (req.query.query == "") {
+            var regex = ".*"
         }
-        regex += ".*";
-        console.log(regex);
-        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[req.body.x, req.body.y], req.body.distance / 3963.2] } }, "name": { $regex: regex, $options: "i" } }, function (err, Offerss) {
+        else {
+            var query = req.query.query
+            var regex = ".*";
+            regex += "(?=.*" + query + "\\b).*"
+            regex += ".*";
+        }
+
+        OffersModel.find({ geodata: { $geoWithin: { $centerSphere: [[latitude, longitude], radius / 3963.2] } }, "name": { $regex: regex, $options: "i" }, "originSite": req.query.store, "validated": true }).populate("postedBy").exec(function (err, Offerss) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
@@ -79,19 +126,19 @@ module.exports = {
             });
             objHistory.save(function (err, HistoryEntry) {
 
-            var userId = req.session.userId;
-            if (userId) {
-                UsersModel.findByIdAndUpdate(userId, {
-                    $push: {
-                        history: ObjectId(HistoryEntry._id)
-                    }
-                }, function (err, user) {
-                    if (err) {
-                        console.error('Error when updating user history:', err);
-                    }
-                });
-            }
-        });
+                var userId = req.session.userId;
+                if (userId) {
+                    UsersModel.findByIdAndUpdate(userId, {
+                        $push: {
+                            history: ObjectId(HistoryEntry._id)
+                        }
+                    }, function (err, user) {
+                        if (err) {
+                            console.error('Error when updating user history:', err);
+                        }
+                    });
+                }
+            });
 
             return res.json(Offerss);
         });
@@ -103,7 +150,7 @@ module.exports = {
     show: function (req, res) {
         var id = req.params.id;
 
-        OffersModel.findOne({ _id: id }, function (err, Offers) {
+        OffersModel.findOne({ _id: id }).populate("postedBy").exec(function (err, Offers) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Offers.',
@@ -151,7 +198,8 @@ module.exports = {
                 pictures: images,
                 originSite: "INTERNAL",
                 location: req.body.location,
-                geodata: userCoordinates
+                geodata: userCoordinates,
+                validated: true
             });
 
             Offers.save(function (err, Offer) {
@@ -171,16 +219,16 @@ module.exports = {
                     });
                     objHistory.save(function (err, HistoryEntry) {
 
-                    UsersModel.findOneAndUpdate({ _id: userId }, {
-                        $push: {
-                            history: ObjectId(HistoryEntry._id)
-                        }
-                    }, function (err, history) {
-                        if (err) {
-                            console.error('Error when updating user history:', err);
-                        }
+                        UsersModel.findOneAndUpdate({ _id: userId }, {
+                            $push: {
+                                history: ObjectId(HistoryEntry._id)
+                            }
+                        }, function (err, history) {
+                            if (err) {
+                                console.error('Error when updating user history:', err);
+                            }
+                        });
                     });
-                });
                 }
 
                 return res.status(201).json(Offer);
@@ -251,7 +299,8 @@ module.exports = {
                     pictures: req.body.pictures,
                     originSite: req.body.originSite,
                     location: req.body.location,
-                    geodata: userCoordinates
+                    geodata: userCoordinates,
+                    validated: (res2.length == 0) ? false : true
                 });
 
                 Offers.save(function (err, Offers) {
@@ -262,7 +311,6 @@ module.exports = {
                             error: err
                         });
                     }
-
                     return res.status(201).json(Offers);
                 });
             })
@@ -385,6 +433,53 @@ module.exports = {
             }
 
             return res.status(204).json();
+        });
+    },
+
+
+    unlist: function (req, res) {
+        var id = req.params.id
+        OffersModel.findOne({
+            _id: id
+        }).exec(function (err, Bookmark) {
+            if (!Bookmark) {
+                return res.status(500)
+            }
+
+            if (Bookmark.available) {
+                OffersModel.findByIdAndUpdate(id, { $set: { available: false } }, { new: true }, function (err, Offers) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when deleting the Offers.',
+                            error: err
+                        });
+                    }
+                    return res.status(204).json();
+                });
+            } else {
+                OffersModel.findByIdAndUpdate(id, { $set: { available: true } }, { new: true }, function (err, Offers) {
+                    if (err) {
+                        return res.status(500).json({
+                            message: 'Error when deleting the Offers.',
+                            error: err
+                        });
+                    }
+                    return res.status(204).json();
+                });
+            }
+        });
+    },
+
+    toValidate: function (req, res) {
+        OffersModel.find({ validated: false }, function (err, Offers) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when finding offers to validate.',
+                    error: err
+                });
+            }
+
+            return res.json(Offers);
         });
     }
 };

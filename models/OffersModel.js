@@ -10,6 +10,7 @@ var OffersSchema = new Schema({
 	'linkToOriginal': String,
 	'available': Boolean,
 	'pictures': [String],
+	'validated': Boolean,
 	'postedBy': {
 		type: Schema.Types.ObjectId,
 		ref: 'users'

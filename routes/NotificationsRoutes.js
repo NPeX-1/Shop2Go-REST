@@ -16,6 +16,7 @@ router.get('/:id', NotificationsController.show);
  * POST
  */
 router.post('/', NotificationsController.create);
+router.post('/seen/:id', NotificationsController.seen)
 
 /*
  * PUT
