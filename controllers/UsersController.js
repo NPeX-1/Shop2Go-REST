@@ -132,8 +132,6 @@ module.exports = {
                                             message: 'No such Users'
                                         });
                                     }
-
-                                    return res.json(Users2);
                                 });
                             });
 
