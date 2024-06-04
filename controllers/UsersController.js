@@ -96,10 +96,8 @@ module.exports = {
                     regex += "(?=.*" + query + ").*"
                     regex += ".*";
                 }
-                console.log(regex)
                 OffersModel.find(
                     { "postDate": { "$gt": new Date(lastrefresh) }, "name": { "$regex": regex, "$options": "i" } }, function (err, Offers) {
-                        console.log(Offers)
                         if (err) {
                             return res.status(500).json({
                                 message: 'Error when getting Wishlist.',
@@ -117,7 +115,6 @@ module.exports = {
                                 objInterest.save(function (err, NotificationEntry) {
                                     UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: NotificationEntry._id }, lastrefresh: Date(Date.now()) }, { new: true }).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
                                         if (err) {
-
                                             return res.status(500).json({
                                                 message: 'Error when getting Users.',
                                                 error: err
@@ -129,9 +126,10 @@ module.exports = {
                         }
                     });
             }
-            return res.status(200);
+            return res.status(200).json({ message: 'Wishlist processed successfully' });
         });
     },
+
 
     bookmarks: function (req, res) {
         var id = req.session.userId;
@@ -155,12 +153,11 @@ module.exports = {
             }, function (err, Offers) {
                 if (err) {
                     return res.status(500).json({
-                        message: 'Error when getting Bookamrks.',
+                        message: 'Error when getting Bookmarks.',
                         error: err
                     });
                 }
 
-                console.log(Offers.length)
                 if (Offers.length > 0) {
                     for (var k = 0; k < Offers.length; k++) {
                         var objInterest = new NotificationsModel({
@@ -171,7 +168,6 @@ module.exports = {
                         objInterest.save(function (err, NotificationEntry) {
                             UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: NotificationEntry._id }, lastrefresh: Date(Date.now()) }, { new: true }).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
                                 if (err) {
-
                                     return res.status(500).json({
                                         message: 'Error when getting Users.',
                                         error: err
@@ -180,13 +176,12 @@ module.exports = {
                             });
                         });
                     }
-                    return res.status(200)
-                }
-                else {
-                    return res.status(500)
+                    return res.status(200).json({ message: 'Successfully processed bookmarks' });
+                } else {
+                    return res.status(200).json({ message: 'No bookmarks found' });
                 }
             });
-        })
+        });
     },
 
 

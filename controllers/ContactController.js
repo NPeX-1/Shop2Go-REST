@@ -59,7 +59,6 @@ module.exports = {
 
         Contact.save(function (err, Contact) {
             if (err) {
-                console.log(req.body)
                 return res.status(500).json({
                     message: 'Error when creating Contact',
                     error: err

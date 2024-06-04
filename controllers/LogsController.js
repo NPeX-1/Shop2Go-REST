@@ -12,7 +12,6 @@ module.exports = {
      * LogsController.show()
      */
     show: function (req, res) {
-        console.log(req.session);
         LogsModel.findOne().select({ log: 1 }).sort({ logDate: -1 }).exec(function (err, Logs) {
             if (err) {
                 return res.status(500).json({
