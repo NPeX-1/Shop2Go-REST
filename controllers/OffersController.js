@@ -23,6 +23,18 @@ wss.on('connection', (ws) => {
     });
 });
 
+const minutes = 10;
+const interval = minutes * 60 * 1000;
+
+setInterval(() => {
+    console.log("Refreshing");
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send("NewPost");
+        }
+    });
+}, interval);
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'public/images/');
@@ -219,11 +231,6 @@ module.exports = {
                     });
                 }
 
-                wss.clients.forEach((client) => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send("NewPost");
-                    }
-                });
                 return res.status(201).json(Offer);
             });
         });
@@ -304,12 +311,6 @@ module.exports = {
                             error: err
                         });
                     }
-
-                    wss.clients.forEach((client) => {
-                        if (client.readyState === WebSocket.OPEN) {
-                            client.send("NewPost");
-                        }
-                    });
                     return res.status(201).json(Offers);
                 });
             })
@@ -441,10 +442,9 @@ module.exports = {
         OffersModel.findOne({
             _id: id
         }).exec(function (err, Bookmark) {
-            if (!Bookmark)
-            {
+            if (!Bookmark) {
                 return res.status(500)
-                }
+            }
 
             if (Bookmark.available) {
                 OffersModel.findByIdAndUpdate(id, { $set: { available: false } }, { new: true }, function (err, Offers) {
@@ -454,13 +454,6 @@ module.exports = {
                             error: err
                         });
                     }
-
-
-                    wss.clients.forEach((client) => {
-                        if (client.readyState === WebSocket.OPEN) {
-                            client.send("Unlisted");
-                        }
-                    });
                     return res.status(204).json();
                 });
             } else {
