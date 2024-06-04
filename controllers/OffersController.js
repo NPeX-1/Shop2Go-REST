@@ -471,13 +471,6 @@ module.exports = {
                             error: err
                         });
                     }
-
-
-                    wss.clients.forEach((client) => {
-                        if (client.readyState === WebSocket.OPEN) {
-                            client.send("NewPost");
-                        }
-                    });
                     return res.status(204).json();
                 });
             }

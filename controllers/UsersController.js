@@ -79,7 +79,6 @@ module.exports = {
                 });
             }
             lastrefresh = Users.lastrefresh;
-
             for (var i = 0; i < Users.interested.length; i++) {
                 if (Users.interested[i].includes(" ")) {
                     var query = Users.interested[i].split(" ");
@@ -97,8 +96,10 @@ module.exports = {
                     regex += "(?=.*" + query + ").*"
                     regex += ".*";
                 }
+                console.log(regex)
                 OffersModel.find(
                     { "postDate": { "$gt": new Date(lastrefresh) }, "name": { "$regex": regex, "$options": "i" } }, function (err, Offers) {
+                        console.log(Offers)
                         if (err) {
                             return res.status(500).json({
                                 message: 'Error when getting Wishlist.',
@@ -106,41 +107,28 @@ module.exports = {
                             });
                         }
 
-                        if (Offers.length < 1) {
-
-                            return res.json(Users);
-                        }
-
-                        for (var k = 0; k < Offers.length; k++) {
-                            var objInterest = new NotificationsModel({
-                                'action': Offers[k]._id,
-                                'update': false,
-                                'seen': false
-                            });
-                            objInterest.save(function (err, NotificationEntry) {
-                                UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: NotificationEntry._id }, lastrefresh: Date(Date.now()) }, { new: true }).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
-                                    if (err) {
-
-                                        return res.status(500).json({
-                                            message: 'Error when getting Users.',
-                                            error: err
-                                        });
-                                    }
-
-                                    if (!Users2) {
-                                        return res.status(404).json({
-                                            message: 'No such Users'
-                                        });
-                                    }
+                        if (Offers.length > 0) {
+                            for (var k = 0; k < Offers.length; k++) {
+                                var objInterest = new NotificationsModel({
+                                    'action': Offers[k]._id,
+                                    'update': false,
+                                    'seen': false
                                 });
-                            });
+                                objInterest.save(function (err, NotificationEntry) {
+                                    UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: NotificationEntry._id }, lastrefresh: Date(Date.now()) }, { new: true }).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
+                                        if (err) {
 
-
+                                            return res.status(500).json({
+                                                message: 'Error when getting Users.',
+                                                error: err
+                                            });
+                                        }
+                                    });
+                                });
+                            }
                         }
                     });
             }
-
-
             return res.status(200);
         });
     },
@@ -160,8 +148,6 @@ module.exports = {
                     message: 'No such Bookmarked Items Yet'
                 });
             }
-            console.log(Users.bookmarks)
-
 
             OffersModel.find({
                 available: false,
@@ -174,38 +160,27 @@ module.exports = {
                     });
                 }
 
-                if (Offers.length < 1) {
-
-                    return res.json(Users);
-                }
-
-                for (var k = 0; k < Offers.length; k++) {
-                    var objInterest = new NotificationsModel({
-                        'action': Offers[k]._id,
-                        'update': true,
-                        'seen': false
-                    });
-                    objInterest.save(function (err, NotificationEntry) {
-                        UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: NotificationEntry._id }, lastrefresh: Date(Date.now()) }, { new: true }).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
-                            if (err) {
-
-                                return res.status(500).json({
-                                    message: 'Error when getting Users.',
-                                    error: err
-                                });
-                            }
-
-                            if (!Users2) {
-                                return res.status(404).json({
-                                    message: 'No such Users'
-                                });
-                            }
-
-                            return res.json(Users2);
+                if (Offers.length > 0) {
+                    for (var k = 0; k < Offers.length; k++) {
+                        var objInterest = new NotificationsModel({
+                            'action': Offers[k]._id,
+                            'update': true,
+                            'seen': false
                         });
-                    });
+                        objInterest.save(function (err, NotificationEntry) {
+                            UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: NotificationEntry._id }, lastrefresh: Date(Date.now()) }, { new: true }).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
+                                if (err) {
 
+                                    return res.status(500).json({
+                                        message: 'Error when getting Users.',
+                                        error: err
+                                    });
+                                }
+                            });
+                        });
+                    }
                 }
+                return res.status(200)
             });
         })
     },
