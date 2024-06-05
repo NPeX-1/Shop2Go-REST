@@ -13,7 +13,7 @@ module.exports = {
      * UsersController.list()
      */
     list: function (req, res) {
-        UsersModel.find(function (err, Userss) {
+        UsersModel.find().populate("interestedReplies").populate("history").exec(function (err, Userss) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when getting Users.',
