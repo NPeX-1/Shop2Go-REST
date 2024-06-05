@@ -170,10 +170,17 @@ module.exports = {
 
     createManual: function (req, res) {
         geocoder.geocode(req.body.location, function (err, res2) {
-            const userCoordinates = {
+            var userCoordinates = {
                 type: "Point",
-                coordinates: [res2[0].latitude, res2[0].longitude],
+                coordinates: [0, 0],
             };
+
+            if (res2.length != 0) {
+                userCoordinates = {
+                    type: "Point",
+                    coordinates: [res2[0].latitude, res2[0].longitude],
+                };
+            }
 
             var images = [];
             if (req.files != undefined) {
