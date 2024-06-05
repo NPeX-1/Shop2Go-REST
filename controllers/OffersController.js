@@ -191,10 +191,12 @@ module.exports = {
             else {
                 images.push("")
             }
+
+            const regex = /(?<=\d)\.(?=\d{3})/g;
             var Offers = new OffersModel({
                 name: req.body.name,
                 description: req.body.description,
-                price: req.body.price,
+                price: req.body.price.replace(regex, ''),
                 postDate: new Date(Date.now()).toISOString(),
                 available: true,
                 postedBy: req.session.userId,
@@ -294,11 +296,11 @@ module.exports = {
                     };
                 }
 
-
+                const regex = /(?<=\d)\.(?=\d{3})/g;
                 var Offers = new OffersModel({
                     name: req.body.name,
                     description: req.body.description,
-                    price: req.body.price,
+                    price: req.body.price.replace(regex, ''),
                     postDate: req.body.postDate,
                     scrapeDate: new Date(Date.now()).toISOString(),
                     linkToOriginal: req.body.linkToOriginal,
