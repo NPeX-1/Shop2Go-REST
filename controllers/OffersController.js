@@ -66,22 +66,15 @@ module.exports = {
      * OffersController.list()
      */
     list: function (req, res) {
-        var query = req.query.query;
-
-        var searchQuery = {};
-
-        if (query) {
-            searchQuery.$text = { $search: query };
-        }
-        OffersModel.find(searchQuery, function (err, Offerss) {
+        OffersModel.find().exec(function (err, Offers) {
             if (err) {
                 return res.status(500).json({
-                    message: 'Error when getting Offers.',
+                    message: 'Error when getting Users.',
                     error: err
                 });
             }
 
-            return res.json(Offerss);
+            return res.json(Offers);
         });
     },
 
@@ -391,7 +384,7 @@ module.exports = {
      */
     update: function (req, res) {
         var id = req.params.id;
-
+        console.log(req.body)
         OffersModel.findOne({ _id: id }, function (err, Offers) {
             if (err) {
                 return res.status(500).json({
@@ -408,27 +401,37 @@ module.exports = {
 
             Offers.name = req.body.name ? req.body.name : Offers.name;
             Offers.description = req.body.description ? req.body.description : Offers.description;
-            Offers.price = req.body.price ? req.body.price : Offers.price;
+            Offers.price = parseFloat(req.body.price) ? req.body.price : Offers.price;
             Offers.postDate = req.body.postDate ? req.body.postDate : Offers.postDate;
-            Offers.scrapeDate = req.body.scrapeDate ? req.body.scrapeDate : Offers.scrapeDate;
-            Offers.linkToOriginal = req.body.linkToOriginal ? req.body.linkToOriginal : Offers.linkToOriginal;
-            Offers.available = req.body.available ? req.body.available : Offers.available;
-            Offers.pictures = req.body.pictures ? req.body.pictures : Offers.pictures;
+            if (Offers.originSite = ! "INTERNAL") {
+                Offers.scrapeDate = req.body.scrapeDate ? req.body.scrapeDate : Offers.scrapeDate;
+                Offers.linkToOriginal = req.body.linkToOriginal ? req.body.linkToOriginal : Offers.linkToOriginal;
+            }
+            if (Offers.originSite == "INTERNAL") {
+                Offers.available = req.body.available ? req.body.available ? true : false : Offers.available;
+                Offers.PostedBy = ObjectId(req.body.postedBy) ? req.body.postedBy : Offers.postedBy;
+            }
+            Offers.validated = req.body.validated ? req.body.validated ? true : false : Offers.validated;
             Offers.originSite = req.body.originSite ? req.body.originSite : Offers.originSite;
             Offers.location = req.body.location ? req.body.location : Offers.location;
-            Offers.latitude = req.body.latitude ? req.body.latitude : Offers.latitude;
-            Offers.longitude = req.body.longitude ? req.body.longitude : Offers.longitude;
+            var latitude = req.body.latitude ? req.body.latitude : Offers.latitude;
+            var longitude = req.body.longitude ? req.body.longitude : Offers.longitude;
+            var userCoordinates = {
+                type: "Point",
+                coordinates: [latitude, longitude],
+            };
+            Offers.geodata = userCoordinates
 
             Offers.save(function (err, Offers) {
-                if (err) {
-                    return res.status(500).json({
-                        message: 'Error when updating Offers.',
-                        error: err
-                    });
-                }
-
-                return res.json(Offers);
-            });
+                 if (err) {
+                     return res.status(500).json({
+                         message: 'Error when updating Offers.',
+                         error: err
+                     });
+                 }
+ 
+                 return res.json(Offers);
+             });
         });
     },
 
