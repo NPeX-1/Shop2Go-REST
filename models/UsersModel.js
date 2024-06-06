@@ -31,7 +31,7 @@ UsersSchema.pre('save', function (next) {
 	var user = this;
 	Users.findOne({ username: user.username })
 		.exec(function (err, ref) {
-			if (user.password == ref.password) {
+			if (ref != null && user.password == ref?.password) {
 				console.log("updating")
 				next()
 			}
