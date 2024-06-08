@@ -423,15 +423,15 @@ module.exports = {
             Offers.geodata = userCoordinates
 
             Offers.save(function (err, Offers) {
-                 if (err) {
-                     return res.status(500).json({
-                         message: 'Error when updating Offers.',
-                         error: err
-                     });
-                 }
- 
-                 return res.json(Offers);
-             });
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when updating Offers.',
+                        error: err
+                    });
+                }
+
+                return res.json(Offers);
+            });
         });
     },
 
@@ -533,5 +533,35 @@ module.exports = {
             }
             return res.json(Geocoded);
         });
+    },
+
+    removePicture: function (req, res) {
+        var id = req.params.id;
+        OffersModel.findOneAndUpdate({ _id: id }, { $pull: { pictures: req.body.picture } }, { new: true }, function (err, Offers) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when deleting the Picture.',
+                    error: err
+                });
+            }
+            console.log(Offers)
+            return res.status(200).json(Offers);
+        });
+
+    },
+
+    addPicture: function (req, res) {
+        var id = req.params.id;
+        OffersModel.findOneAndUpdate({ _id: id }, { $push: { pictures: req.body.picture } }, { new: true }, function (err, Offers) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when deleting the Picture.',
+                    error: err
+                });
+            }
+            console.log(Offers)
+            return res.status(200).json(Offers);
+        });
+
     },
 };
