@@ -56,10 +56,12 @@ router.get('/:id', OffersController.show);
 router.post('/', requiresLogin, upload.array('images'), OffersController.createManual);
 router.post('/validate', OffersController.tryValidate);
 router.post('/scrape', APIKeyValidate, OffersController.createAutomatic);
+router.post('/generate', requiresLogin, OffersController.createAutomatic);
 
 /*
  * PUT
  */
+router.put('/picture/:id', requiresLogin, OffersController.addPicture);
 router.put('/validate/:id', OffersController.validate);
 router.put('/unlist/:id', OffersController.unlist);
 router.put('/:id', OffersController.update);
@@ -67,6 +69,8 @@ router.put('/:id', OffersController.update);
 /*
  * DELETE
  */
-router.delete('/:id', OffersController.remove);
+router.delete('/picture/:id', requiresLogin, OffersController.removePicture);
+router.delete('/:id', requiresLogin, OffersController.remove);
+
 
 module.exports = router;

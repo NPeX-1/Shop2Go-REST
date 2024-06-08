@@ -36,6 +36,9 @@ router.post('/login', UsersController.login);
 router.put('/:id', UsersController.update);
 
 router.delete('/wishlist/:toRemove', UsersController.removeWishlistItem);
-router.delete('/:id', UsersController.remove);
+router.delete('/notification/:id', requiresLogin, UsersController.seen)
+router.delete('/history/:id', requiresLogin, UsersController.delHistory)
+router.delete('/:id', requiresLogin, UsersController.remove);
+
 
 module.exports = router;

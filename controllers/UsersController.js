@@ -1,5 +1,6 @@
 var UsersModel = require('../models/UsersModel.js');
 var OffersModel = require('../models/OffersModel.js');
+var HistoryModel = require('../models/historyModel.js');
 const NotificationsModel = require('../models/NotificationsModel.js');
 var ObjectId = require('mongoose').Types.ObjectId;
 /**
@@ -221,12 +222,13 @@ module.exports = {
 
     createBookmark: function (req, res) {
         var id = req.params.id
+        var userId = (req.body.userId != undefined) ? req.body.userId : req.session.userId
         UsersModel.findOne({
             _id: req.session.userId,
             bookmarks: id
         }).exec(function (err, Bookmark) {
             if (!Bookmark) {
-                UsersModel.findOneAndUpdate({ _id: req.session.userId }, { $push: { bookmarks: ObjectId(id) } }, { new: true }).exec(function (err, Users) {
+                UsersModel.findOneAndUpdate({ _id: userId }, { $push: { bookmarks: ObjectId(id) } }, { new: true }).populate("interestedReplies").populate("history").exec(function (err, Users) {
                     console.log(err)
                     if (err) {
                         return res.status(500).json({
@@ -244,7 +246,7 @@ module.exports = {
                     return res.json(Users);
                 });
             } else {
-                UsersModel.findOneAndUpdate({ _id: req.session.userId }, { $pull: { bookmarks: ObjectId(id) } }, { new: true }).exec(function (err, Users) {
+                UsersModel.findOneAndUpdate({ _id: userId }, { $pull: { bookmarks: ObjectId(id) } }, { new: true }).populate("interestedReplies").populate("history").exec(function (err, Users) {
                     console.log(err)
                     if (err) {
                         return res.status(500).json({
@@ -396,15 +398,63 @@ module.exports = {
     },
 
     removeWishlistItem: function (req, res) {
-        var id = req.session.userId;
+        var id = (req.body.userId != undefined) ? req.body.userId : req.session.userId;
 
-        UsersModel.findOneAndUpdate({ _id: id }, { $pull: { interested: req.params.toRemove } }, { new: true }, function (err, Users) {
+        UsersModel.findOneAndUpdate({ _id: id }, { $pull: { interested: req.params.toRemove } }, { new: true }).populate("interestedReplies").populate("history").exec(function (err, Users) {
             if (err) {
                 return res.status(500).json({
                     message: 'Error when deleting the Users.',
                     error: err
                 });
             }
+
+            return res.status(200).json(Users);
+        });
+
+    },
+
+    seen: function (req, res) {
+        var id = req.params.id;
+
+        UsersModel.findOneAndUpdate({ _id: id }, { $pull: { interestedReplies: req.body.notification } }, { new: true }).populate("interestedReplies").populate("history").exec(function (err, Users) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when deleting the Users.',
+                    error: err
+                });
+            }
+            NotificationsModel.findByIdAndRemove(req.body.notification, function (err, Notif) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when deleting the Users.',
+                        error: err
+                    });
+                }
+            })
+
+            return res.status(200).json(Users);
+        });
+
+    },
+
+    delHistory: function (req, res) {
+        var id = req.params.id;
+
+        UsersModel.findOneAndUpdate({ _id: id }, { $pull: { history: req.body.history } }, { new: true }).populate("interestedReplies").populate("history").exec(function (err, Users) {
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when deleting the Users.',
+                    error: err
+                });
+            }
+            HistoryModel.findByIdAndRemove(req.body.history, function (err, Notif) {
+                if (err) {
+                    return res.status(500).json({
+                        message: 'Error when deleting the Users.',
+                        error: err
+                    });
+                }
+            })
 
             return res.status(200).json(Users);
         });
