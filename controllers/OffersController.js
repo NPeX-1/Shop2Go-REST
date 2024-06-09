@@ -464,24 +464,24 @@ module.exports = {
             }
 
             if (Bookmark.available) {
-                OffersModel.findByIdAndUpdate(id, { $set: { available: false } }, { new: true }, function (err, Offers) {
+                OffersModel.findByIdAndUpdate(id, { $set: { available: false } }, { new: true }).populate("postedBy").exec(function (err, Offers) {
                     if (err) {
                         return res.status(500).json({
                             message: 'Error when deleting the Offers.',
                             error: err
                         });
                     }
-                    return res.status(204).json();
+                    return res.json(Offers);
                 });
             } else {
-                OffersModel.findByIdAndUpdate(id, { $set: { available: true } }, { new: true }, function (err, Offers) {
+                OffersModel.findByIdAndUpdate(id, { $set: { available: true } }, { new: true }).populate("postedBy").exec(function (err, Offers) {
                     if (err) {
                         return res.status(500).json({
                             message: 'Error when deleting the Offers.',
                             error: err
                         });
                     }
-                    return res.status(204).json();
+                    return res.json(Offers);
                 });
             }
         });

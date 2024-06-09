@@ -51,6 +51,29 @@ module.exports = {
         });
     },
 
+    getStatus: function (req, res) {
+        var id = req.session.userId;
+
+        UsersModel.findOne({ _id: id }).exec(function (err, user) {
+            console.log(err)
+            if (err) {
+                return res.status(500).json({
+                    message: 'Error when getting user information.',
+                    error: err
+                });
+            }
+
+            if (!user) {
+                return res.status(404).json({
+                    message: 'User not found.'
+                });
+            }
+
+            return res.json(user);
+        });
+    },
+
+
 
 
     getPostsByUser: async function (req, res) {
@@ -80,25 +103,30 @@ module.exports = {
                 });
             }
             lastrefresh = Users.lastrefresh;
-            for (var i = 0; i < Users.interested.length; i++) {
-                if (Users.interested[i].includes(" ")) {
-                    var query = Users.interested[i].split(" ");
-                    var regex = ".*";
+
+            // Collect all matching offers in a single array
+            var allOffers = [];
+            var pendingQueries = Users.interested.length;
+
+            Users.interested.forEach(function (interest) {
+                var regex = ".*";
+
+                if (interest.includes(" ")) {
+                    var query = interest.split(" ");
                     for (var j = 0; j < query.length; j++) {
-                        regex += "(?=.*" + query[j] + ").*"
+                        regex += "(?=.*" + query[j] + ").*";
                     }
                     regex += ".*";
-                } else if (Users.interested[i] == "") {
-                    var regex = ".*"
-                }
-                else {
-                    var query = Users.interested[i]
-                    var regex = ".*";
-                    regex += "(?=.*" + query + ").*"
+                } else if (interest === "") {
+                    regex = ".*";
+                } else {
+                    regex += "(?=.*" + interest + ").*";
                     regex += ".*";
                 }
+
                 OffersModel.find(
-                    { "postDate": { "$gt": new Date(lastrefresh) }, "name": { "$regex": regex, "$options": "i" } }, function (err, Offers) {
+                    { "postDate": { "$gt": new Date(lastrefresh) }, "name": { "$regex": regex, "$options": "i" } },
+                    function (err, Offers) {
                         if (err) {
                             return res.status(500).json({
                                 message: 'Error when getting Wishlist.',
@@ -106,28 +134,54 @@ module.exports = {
                             });
                         }
 
-                        if (Offers.length > 0) {
-                            for (var k = 0; k < Offers.length; k++) {
-                                var objInterest = new NotificationsModel({
-                                    'action': Offers[k]._id,
-                                    'update': false,
-                                    'seen': false
-                                });
-                                objInterest.save(function (err, NotificationEntry) {
-                                    UsersModel.findOneAndUpdate({ _id: id }, { $push: { interestedReplies: NotificationEntry._id }, lastrefresh: Date(Date.now()) }, { new: true }).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
-                                        if (err) {
-                                            return res.status(500).json({
-                                                message: 'Error when getting Users.',
-                                                error: err
-                                            });
-                                        }
-                                    });
+                        allOffers = allOffers.concat(Offers);
+
+                        pendingQueries--;
+                        if (pendingQueries === 0) {
+                            processNotifications(allOffers);
+                        }
+                    }
+                );
+            });
+
+            function processNotifications(offers) {
+                if (offers.length > 0) {
+                    offers.forEach(function (offer) {
+                        var objInterest = new NotificationsModel({
+                            'action': offer._id,
+                            'update': false,
+                            'seen': false
+                        });
+
+                        objInterest.save(function (err, NotificationEntry) {
+                            if (err) {
+                                return res.status(500).json({
+                                    message: 'Error when saving Notification.',
+                                    error: err
                                 });
                             }
-                        }
+
+                            UsersModel.findOneAndUpdate(
+                                { _id: id },
+                                {
+                                    $push: { interestedReplies: NotificationEntry._id },
+                                    lastrefresh: new Date()
+                                },
+                                { new: true }
+                            ).populate("interestedReplies").populate("bookmarks").populate("history").exec(function (err, Users2) {
+                                if (err) {
+                                    return res.status(500).json({
+                                        message: 'Error when getting Users.',
+                                        error: err
+                                    });
+                                }
+                            });
+                        });
                     });
+                }
+
+                return res.status(200).json({ message: 'Wishlist processed successfully' });
             }
-            return res.status(200).json({ message: 'Wishlist processed successfully' });
         });
     },
 
