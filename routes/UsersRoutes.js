@@ -19,6 +19,7 @@ function requiresLogin(req, res, next) {
 
 router.get('/', UsersController.list);
 
+router.get('/status', UsersController.getStatus);
 router.get('/bookmarks', UsersController.bookmarks);
 router.get('/wishlist', UsersController.wishlist);
 router.get('/logout', UsersController.logout);
