@@ -3,10 +3,7 @@ name: Node.js CI with MongoDB
 on:
   push:
     branches:
-      - main
-  pull_request:
-    branches:
-      - main
+      - development
 
 jobs:
   test:
