@@ -17,12 +17,29 @@ const {
 var { expressjwt: jwt } = require("express-jwt");
 
 var mongoose = require('mongoose');
-var mongoDB = "mongodb://mongo:27017/shop2go"
-//var mongoDB = "mongodb://localhost:27017/shop2go"
-mongoose.connect(mongoDB);
+var mongoDB = "mongodb://localhost:27017/shop2go";  // Primary MongoDB URI
+var mongoDBFallback = "mongodb://mongo:27017/shop2go";  // Fallback MongoDB URI
+
+mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => {
+    console.log('MongoDB connected successfully');
+  })
+  .catch((err) => {
+    console.error('Error connecting to MongoDB:', err.message);
+    console.log('Trying fallback MongoDB connection...');
+    mongoose.connect(mongoDBFallback, { useNewUrlParser: true, useUnifiedTopology: true })
+      .then(() => {
+        console.log('Fallback MongoDB connected successfully');
+      })
+      .catch((err) => {
+        console.error('Fallback MongoDB connection error:', err.message);
+      });
+  });
+
 mongoose.Promise = global.Promise;
 var db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/UsersRoutes');
@@ -88,20 +105,18 @@ app.use('/log', logsRouter);
 app.use('/contact', contactRouter);
 app.use('/notifications', notificationsRouter);
 
-// catch 404 and forward to error handler
+
 app.use(function (req, res, next) {
   next(createError(404));
 });
 
-// error handler
 app.use(function (err, req, res, next) {
-  // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
   res.status(err.status || 500);
   res.render('error');
 });
+
 
 module.exports = app;
