@@ -529,7 +529,8 @@ module.exports = {
     tryValidate: function (req, res) {
         geocoder.geocode(req.body.location, function (err, Geocoded) {
             if (err) {
-                return res.status(500).message(err);
+                console.log(err)
+                return res.status(500);
             }
             return res.json(Geocoded);
         });
