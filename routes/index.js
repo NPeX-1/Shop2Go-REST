@@ -40,14 +40,5 @@ router.get('/test-db-connection', async (req, res) => {
   }
 });
 
-router.get('/generate-csrf-token', (req, res) => {
-  const token = generateToken(req, true);
-  if (token) {
-    res.status(200).send(token);
-  } else {
-    res.status(500).send('Failed to generate CSRF token');
-  }
-});
-
 
 module.exports = router;

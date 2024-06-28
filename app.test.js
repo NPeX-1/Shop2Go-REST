@@ -9,9 +9,9 @@ describe('GET /test-db-connection', () => {
     });
 });
 
-describe('GET /generate-csrf-token', () => {
+describe('GET /csrf', () => {
     it('should generate a CSRF token', async () => {
-        const res = await request(app).get('/generate-csrf-token');
+        const res = await request(app).get('/csrf');
         expect(res.statusCode).toEqual(200);
         expect(res.text).not.toBeNull();
     });
