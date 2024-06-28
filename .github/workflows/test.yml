@@ -10,15 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongo admin --eval 'db.runCommand({ ping: 1 })'" --health-interval 10s --health-timeout 10s --health-retries 5
+      docker:
+        image: docker:stable-dind
+        options: --privileged # Required to run Docker inside Docker
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Docker Compose
+        run: |
+          sudo service docker start
+          docker-compose --version || (curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh)
+          docker-compose --version
+
+      - name: Start MongoDB
+        run: |
+          docker run -d --name mongodb -p 27017:27017 mongo:latest
+
+      - name: Wait for MongoDB to start
+        run: |
+          timeout=0
+          while [[ $timeout -lt 30 ]]; do
+            if docker logs mongodb | grep -q 'waiting for connections on port'; then
+              echo "MongoDB started successfully!"
+              break
+            fi
+            echo "Waiting for MongoDB to start..."
+            sleep 5
+            timeout=$((timeout + 5))
+          done
+          docker ps -a
 
       - name: Setup Node.js
         uses: actions/setup-node@v2
@@ -30,3 +52,6 @@ jobs:
 
       - name: Run Tests
         run: npm test
+
+      - name: Stop MongoDB
+        run: docker stop mongodb
